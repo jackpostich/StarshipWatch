@@ -1,0 +1,7 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Run the sync every hour
+[functions."sync-launches"]
+  schedule = "0 * * * *"

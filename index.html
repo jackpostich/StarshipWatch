@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Starship Watch</title>
+  <style>
+    :root {
+      --bg: #090c14;
+      --surface: #0e1420;
+      --surface2: #141b2b;
+      --border: #1e2d47;
+      --accent: #3b82f6;
+      --accent2: #06b6d4;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --orange: #f97316;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --dim: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 25%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 75%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 45%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 35% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 5%,  rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5%  55%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 48% 33%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(2px 2px at 88% 12%, rgba(255,255,255,0.15) 0%, transparent 100%),
+        radial-gradient(2px 2px at 22% 67%, rgba(255,255,255,0.15) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 36px;
+    }
+
+    .logo { display: flex; align-items: center; gap: 12px; }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    .logo h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent2); }
+    .updated { font-size: 12px; color: var(--muted); }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    }
+
+    /* ── Loading / error states ── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .error-msg {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: var(--red); border-radius: 8px; padding: 14px 18px;
+      font-size: 13px; margin-bottom: 16px;
+    }
+
+    /* ── Next Launch Banner ── */
+    .next-launch {
+      background: linear-gradient(135deg, #0f1e38 0%, #0e1420 60%, #0a1628 100%);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+      min-height: 130px;
+    }
+
+    .launch-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent); font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px; margin-bottom: 10px;
+    }
+
+    .pulse {
+      width: 7px; height: 7px; background: var(--accent);
+      border-radius: 50%; animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .launch-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+
+    .launch-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+    .meta-item strong { color: var(--text); font-weight: 600; }
+    .meta-dot { width: 3px; height: 3px; background: var(--dim); border-radius: 50%; }
+
+    /* ── Countdown ── */
+    .countdown { display: flex; gap: 12px; }
+
+    .cd-unit { text-align: center; min-width: 56px; }
+    .cd-value {
+      font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1;
+      background: linear-gradient(180deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .cd-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+    .cd-sep { font-size: 28px; font-weight: 300; color: var(--dim); align-self: flex-start; padding-top: 2px; }
+
+    /* ── Flight Cards ── */
+    .flights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .flight-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .flight-card:hover { border-color: var(--accent); }
+    .flight-card.active { border-top: 2px solid var(--accent); }
+
+    .flight-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .flight-num { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent2); margin-bottom: 4px; }
+    .flight-name { font-size: 16px; font-weight: 700; }
+
+    .status-pill {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+    }
+    .status-upcoming   { background: rgba(59,130,246,0.15);  color: var(--accent);  border: 1px solid rgba(59,130,246,0.25); }
+    .status-net        { background: rgba(249,115,22,0.15);  color: var(--orange);  border: 1px solid rgba(249,115,22,0.25); }
+    .status-scrubbed   { background: rgba(239,68,68,0.15);   color: var(--red);     border: 1px solid rgba(239,68,68,0.25); }
+    .status-launched   { background: rgba(34,197,94,0.15);   color: var(--green);   border: 1px solid rgba(34,197,94,0.25); }
+    .status-success    { background: rgba(34,197,94,0.15);   color: var(--green);   border: 1px solid rgba(34,197,94,0.25); }
+    .status-stacking   { background: rgba(234,179,8,0.15);   color: var(--yellow);  border: 1px solid rgba(234,179,8,0.25); }
+    .status-production { background: rgba(100,116,139,0.15); color: var(--muted);   border: 1px solid rgba(100,116,139,0.2); }
+    .status-ready      { background: rgba(34,197,94,0.15);   color: var(--green);   border: 1px solid rgba(34,197,94,0.25); }
+    .status-stacked    { background: rgba(234,179,8,0.15);   color: var(--yellow);  border: 1px solid rgba(234,179,8,0.25); }
+
+    .hardware-row { display: flex; flex-direction: column; gap: 8px; }
+
+    .hw-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--surface2); border-radius: 7px;
+    }
+    .hw-icon { font-size: 18px; flex-shrink: 0; }
+    .hw-info { flex: 1; }
+    .hw-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .hw-detail { font-size: 11px; color: var(--muted); }
+
+    .hw-tag {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+    }
+    .tag-v3      { background: rgba(6,182,212,0.15);  color: var(--accent2); }
+    .tag-v2      { background: rgba(59,130,246,0.12); color: #7dd3fc; }
+    .tag-stacked { background: rgba(234,179,8,0.15);  color: var(--yellow); }
+    .tag-ready   { background: rgba(34,197,94,0.15);  color: var(--green); }
+
+    .flight-date {
+      margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--muted);
+    }
+    .flight-date strong { color: var(--text); }
+
+    /* ── Pipeline ── */
+    .pipeline { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+
+    @media (max-width: 700px) {
+      .pipeline { grid-template-columns: 1fr; }
+      .next-launch { grid-template-columns: 1fr; }
+      .countdown { justify-content: center; }
+    }
+
+    .pipeline-col {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px;
+    }
+    .pipeline-col h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    .pipeline-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .pipeline-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .pipeline-item:first-child { padding-top: 0; }
+
+    .pipe-num { font-size: 15px; font-weight: 800; color: var(--accent); min-width: 28px; }
+    .pipe-info { flex: 1; }
+    .pipe-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .pipe-status { font-size: 11px; color: var(--muted); }
+
+    .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.6s ease;
+    }
+
+    .pipe-flight-tag {
+      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border); padding-top: 20px; margin-top: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--muted);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Skeleton placeholders ── */
+    .skel-banner-title { height: 34px; width: 260px; margin-bottom: 12px; }
+    .skel-banner-meta  { height: 18px; width: 380px; }
+    .skel-cd           { height: 48px; width: 240px; }
+    .skel-card         { height: 180px; }
+    .skel-pipe-item    { height: 56px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🚀</div>
+      <h1>Starship<span>Watch</span></h1>
+    </div>
+    <div class="updated" id="last-updated">Loading…</div>
+  </header>
+
+  <!-- Next launch -->
+  <div class="section-title">Next Launch</div>
+  <div class="next-launch" id="banner">
+    <div>
+      <div class="skeleton skel-banner-title"></div>
+      <div class="skeleton skel-banner-meta"></div>
+    </div>
+    <div class="skeleton skel-cd"></div>
+  </div>
+
+  <!-- Upcoming flights -->
+  <div class="section-title">Upcoming Flights</div>
+  <div id="error-flights" style="display:none" class="error-msg">⚠️ Could not load flights.</div>
+  <div class="flights-grid" id="flights-grid">
+    <div class="flight-card"><div class="skeleton skel-card"></div></div>
+    <div class="flight-card"><div class="skeleton skel-card"></div></div>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="section-title">Hardware Pipeline</div>
+  <div id="error-pipeline" style="display:none" class="error-msg">⚠️ Could not load hardware pipeline.</div>
+  <div class="pipeline">
+    <div class="pipeline-col" id="boosters-col">
+      <h3>🔥 Super Heavy Boosters</h3>
+      <div class="skeleton skel-pipe-item"></div>
+      <div class="skeleton skel-pipe-item"></div>
+    </div>
+    <div class="pipeline-col" id="ships-col">
+      <h3>🛸 Starship Upper Stages</h3>
+      <div class="skeleton skel-pipe-item"></div>
+      <div class="skeleton skel-pipe-item"></div>
+      <div class="skeleton skel-pipe-item"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Starship Watch — Fan-made tracker. Data sourced from SpaceX updates &amp; community reporting.</span>
+    <span id="footer-link"></span>
+  </footer>
+
+</div>
+
+<!-- Supabase JS client (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — replace with your project values
+// ─────────────────────────────────────────────
+const SUPABASE_URL      = 'https://alezrdalsgvfhivxnqeb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsZXpyZGFsc2d2ZmhpdnhucWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQzNzQsImV4cCI6MjA5NDEyMDM3NH0.ee12DxzlQcWSRBUS04pCfDAmlGDz3uRJEHL1_TQlkYk';
+// ─────────────────────────────────────────────
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Countdown ────────────────────────────────
+let countdownTarget = null;
+let countdownTimer  = null;
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function startCountdown(dateStr) {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTarget = dateStr ? new Date(dateStr + 'T12:00:00-05:00') : null;
+
+  function tick() {
+    const el = document.getElementById('countdown-el');
+    if (!el) return;
+
+    if (!countdownTarget) {
+      el.innerHTML = '<span style="font-size:14px;color:var(--muted)">Date TBD</span>';
+      return;
+    }
+
+    const diff = countdownTarget - Date.now();
+    if (diff <= 0) {
+      el.innerHTML = '<span style="font-size:14px;color:var(--green)">T-0 — Launch window open</span>';
+      return;
+    }
+
+    const days  = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins  = Math.floor((diff % 3600000)  / 60000);
+    const secs  = Math.floor((diff % 60000)    / 1000);
+
+    el.innerHTML = `
+      <div class="cd-unit"><div class="cd-value">${pad(days)}</div><div class="cd-label">Days</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-value">${pad(hours)}</div><div class="cd-label">Hours</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-value">${pad(mins)}</div><div class="cd-label">Mins</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-value">${pad(secs)}</div><div class="cd-label">Secs</div></div>
+    `;
+  }
+
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+// ── Helpers ───────────────────────────────────
+const STATUS_PILL = {
+  upcoming:   'status-upcoming',
+  net:        'status-net',
+  scrubbed:   'status-scrubbed',
+  launched:   'status-launched',
+  success:    'status-success',
+  partial:    'status-launched',
+  failure:    'status-scrubbed',
+  planned:    'status-production',
+  production: 'status-production',
+  stacking:   'status-stacking',
+  stacked:    'status-stacked',
+  testing:    'status-stacking',
+  ready:      'status-ready',
+  retired:    'status-production',
+  destroyed:  'status-scrubbed',
+};
+
+function pillHtml(status, label) {
+  const cls = STATUS_PILL[status] ?? 'status-upcoming';
+  return `<div class="status-pill ${cls}">${label ?? status}</div>`;
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return 'TBD';
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function hwTagHtml(version) {
+  if (!version) return '';
+  const cls = version === 'v3' ? 'tag-v3' : 'tag-v2';
+  return `<div class="hw-tag ${cls}">${version}</div>`;
+}
+
+function statusTagHtml(status) {
+  const cls = STATUS_PILL[status] ?? 'status-production';
+  return `<div class="pipe-flight-tag ${cls}">${status}</div>`;
+}
+
+// ── Render: Banner ────────────────────────────
+function renderBanner(row) {
+  const banner = document.getElementById('banner');
+
+  if (!row) {
+    banner.innerHTML = `
+      <div>
+        <div class="launch-badge"><div class="pulse"></div>No upcoming flights</div>
+        <div class="launch-title">Stay tuned</div>
+      </div>`;
+    return;
+  }
+
+  const netLabel = row.net_confirmed ? `NET ${fmtDate(row.net_date)}` : 'Date TBD';
+
+  banner.innerHTML = `
+    <div>
+      <div class="launch-badge"><div class="pulse"></div>NET Launch</div>
+      <div class="launch-title">${row.name}</div>
+      <div class="launch-meta">
+        <div class="meta-item">📅 <strong>${fmtDate(row.net_date)}</strong></div>
+        ${row.booster_serial ? `<div class="meta-dot"></div><div class="meta-item">🔥 <strong>${row.booster_serial}</strong>${row.booster_version ? ` (${row.booster_version})` : ''}</div>` : ''}
+        ${row.ship_serial    ? `<div class="meta-dot"></div><div class="meta-item">🛸 <strong>${row.ship_serial}</strong></div>` : ''}
+        <div class="meta-dot"></div>
+        <div class="meta-item">📍 <strong>${row.launch_site}</strong></div>
+      </div>
+    </div>
+    <div class="countdown" id="countdown-el"></div>
+  `;
+
+  startCountdown(row.net_date);
+
+  if (row.spacex_url) {
+    document.getElementById('footer-link').innerHTML =
+      `<a href="${row.spacex_url}" target="_blank">SpaceX mission page ↗</a>`;
+  }
+}
+
+// ── Render: Flight Cards ──────────────────────
+function renderFlights(flights, assignments) {
+  const grid = document.getElementById('flights-grid');
+
+  if (!flights.length) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:13px;">No upcoming flights found.</p>';
+    return;
+  }
+
+  // Build a map: flight_id → { booster, ship }
+  const hwMap = {};
+  for (const a of assignments) {
+    if (!a.is_primary) continue;
+    hwMap[a.flight_id] = { booster: a.boosters, ship: a.ships };
+  }
+
+  grid.innerHTML = flights.map((f, i) => {
+    const hw      = hwMap[f.id] ?? {};
+    const booster = hw.booster;
+    const ship    = hw.ship;
+    const isNext  = i === 0;
+
+    const boosterHtml = booster ? `
+      <div class="hw-item">
+        <div class="hw-icon">🔥</div>
+        <div class="hw-info">
+          <div class="hw-name">${booster.serial}</div>
+          <div class="hw-detail">${booster.notes ?? ''}</div>
+        </div>
+        ${hwTagHtml(booster.version)}
+      </div>` : '';
+
+    const shipHtml = ship ? `
+      <div class="hw-item">
+        <div class="hw-icon">🛸</div>
+        <div class="hw-info">
+          <div class="hw-name">${ship.serial}</div>
+          <div class="hw-detail">${ship.notes ?? ''}</div>
+        </div>
+        <div class="hw-tag ${ship.status === 'ready' ? 'tag-ready' : 'tag-stacked'}">${ship.status}</div>
+      </div>` : '';
+
+    const dateLabel = f.status === 'net' ? 'NET Launch' : 'Estimated';
+
+    return `
+      <div class="flight-card${isNext ? ' active' : ''}">
+        <div class="flight-header">
+          <div>
+            <div class="flight-num">IFT-${f.flight_num}</div>
+            <div class="flight-name">${f.name}</div>
+          </div>
+          ${pillHtml(f.status, f.status === 'net' ? `NET ${fmtDate(f.net_date)}` : f.status)}
+        </div>
+        <div class="hardware-row">
+          ${boosterHtml}
+          ${shipHtml}
+          ${!boosterHtml && !shipHtml ? '<div style="font-size:12px;color:var(--muted);padding:8px 12px;">Hardware TBD</div>' : ''}
+        </div>
+        <div class="flight-date">
+          <span>${dateLabel}</span>
+          <strong>${fmtDate(f.net_date)}</strong>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Render: Pipeline ──────────────────────────
+function renderPipeline(boosters, ships) {
+  const bCol = document.getElementById('boosters-col');
+  const sCol = document.getElementById('ships-col');
+
+  const pipeItem = (serial, name, statusStr, pct, flightNum, versionTag) => `
+    <div class="pipeline-item">
+      <div class="pipe-num">${serial}</div>
+      <div class="pipe-info">
+        <div class="pipe-name">${name}${versionTag ? ` <span style="color:var(--accent2);font-size:11px;">${versionTag}</span>` : ''}</div>
+        <div class="pipe-status">${statusStr}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      ${flightNum ? `${statusTagHtml('IFT-' + flightNum)}` : ''}
+    </div>`;
+
+  bCol.innerHTML = '<h3>🔥 Super Heavy Boosters</h3>' +
+    (boosters.length
+      ? boosters.map(b => pipeItem(
+          b.serial, b.serial,
+          b.notes ?? b.status,
+          b.progress_pct,
+          b.flights?.flight_num,
+          b.version
+        )).join('')
+      : '<p style="font-size:12px;color:var(--muted);">No booster data.</p>');
+
+  sCol.innerHTML = '<h3>🛸 Starship Upper Stages</h3>' +
+    (ships.length
+      ? ships.map(s => pipeItem(
+          s.serial, s.serial,
+          s.notes ?? s.status,
+          s.progress_pct,
+          s.flights?.flight_num,
+          null
+        )).join('')
+      : '<p style="font-size:12px;color:var(--muted);">No ship data.</p>');
+}
+
+// ── Load everything ───────────────────────────
+async function loadAll() {
+  document.getElementById('last-updated').textContent =
+    'Updated ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // Fire all queries in parallel
+  const [bannerRes, flightsRes, assignRes, boostersRes, shipsRes] = await Promise.all([
+    sb.from('next_launch').select('*').single(),
+
+    sb.from('flights')
+      .select('id, flight_num, name, status, net_date, net_confirmed')
+      .in('status', ['upcoming', 'net'])
+      .order('net_date', { ascending: true, nullsFirst: false })
+      .order('flight_num', { ascending: true }),
+
+    sb.from('flight_assignments')
+      .select('flight_id, is_primary, boosters(serial, version, notes, status), ships(serial, status, notes)')
+      .eq('is_primary', true),
+
+    sb.from('boosters')
+      .select('serial, version, status, progress_pct, notes, flights(flight_num)')
+      .order('serial', { ascending: true }),
+
+    sb.from('ships')
+      .select('serial, status, progress_pct, notes, flights(flight_num)')
+      .order('serial', { ascending: true }),
+  ]);
+
+  // Banner
+  if (bannerRes.error) {
+    document.getElementById('banner').innerHTML =
+      '<div class="error-msg">⚠️ Could not load next launch.</div>';
+  } else {
+    renderBanner(bannerRes.data);
+  }
+
+  // Flights
+  if (flightsRes.error || assignRes.error) {
+    document.getElementById('error-flights').style.display = 'flex';
+    document.getElementById('flights-grid').innerHTML = '';
+  } else {
+    renderFlights(flightsRes.data, assignRes.data);
+  }
+
+  // Pipeline
+  if (boostersRes.error || shipsRes.error) {
+    document.getElementById('error-pipeline').style.display = 'flex';
+  } else {
+    renderPipeline(boostersRes.data, shipsRes.data);
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>
