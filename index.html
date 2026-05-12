@@ -3,333 +3,529 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Starship Watch</title>
+  <title>STARSHIP WATCH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #090c14;
-      --surface: #0e1420;
-      --surface2: #141b2b;
-      --border: #1e2d47;
-      --accent: #3b82f6;
-      --accent2: #06b6d4;
-      --green: #22c55e;
-      --yellow: #eab308;
-      --orange: #f97316;
-      --red: #ef4444;
-      --text: #e2e8f0;
-      --muted: #64748b;
-      --dim: #334155;
+      --bg: #0a0a0a;
+      --surface: #0a0a0a;
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.18);
+      --text: #ffffff;
+      --text-secondary: rgba(255,255,255,0.5);
+      --text-muted: rgba(255,255,255,0.3);
+      --accent: #4a9eff;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --gray: rgba(255,255,255,0.4);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    body::before {
-      content: '';
+    /* ── Progress bar (top of page) ── */
+    #refresh-bar {
       position: fixed;
-      inset: 0;
-      background-image:
-        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
-        radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 40% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 55% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 70% 25%, rgba(255,255,255,0.6) 0%, transparent 100%),
-        radial-gradient(1px 1px at 80% 75%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 90% 45%, rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 35% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 75% 5%,  rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 5%  55%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(2px 2px at 48% 33%, rgba(255,255,255,0.2) 0%, transparent 100%),
-        radial-gradient(2px 2px at 88% 12%, rgba(255,255,255,0.15) 0%, transparent 100%),
-        radial-gradient(2px 2px at 22% 67%, rgba(255,255,255,0.15) 0%, transparent 100%);
-      pointer-events: none;
-      z-index: 0;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: var(--accent);
+      width: 0%;
+      z-index: 9999;
+      transition: width 1s linear;
+      opacity: 0.6;
     }
 
+    /* ── Wrapper ── */
     .wrapper {
-      position: relative;
-      z-index: 1;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 20px 60px;
+      padding: 0 24px 80px;
     }
 
-    /* ── Header ── */
-    header {
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 24px 0 20px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 36px;
+      height: 64px;
     }
-
-    .logo { display: flex; align-items: center; gap: 12px; }
-
-    .logo-icon {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
+    .logo {
+      font-size: 16px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
     }
+    .logo-light { font-weight: 200; }
+    .logo-bold { font-weight: 500; }
 
-    .logo h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-    .logo span { color: var(--accent2); }
-    .updated { font-size: 12px; color: var(--muted); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .nav-link {
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .nav-link:hover { opacity: 1; color: var(--text); }
+
+    .last-updated {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
 
     /* ── Section titles ── */
-    .section-title {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    .section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      margin-top: 64px;
     }
 
-    /* ── Loading / error states ── */
-    .skeleton {
-      background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
+    /* ── Hero / Next Launch ── */
+    .hero {
+      padding: 80px 0 60px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
     }
-
-    @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    .error-msg {
-      display: flex; align-items: center; gap: 10px;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.25);
-      color: var(--red); border-radius: 8px; padding: 14px 18px;
-      font-size: 13px; margin-bottom: 16px;
-    }
-
-    /* ── Next Launch Banner ── */
-    .next-launch {
-      background: linear-gradient(135deg, #0f1e38 0%, #0e1420 60%, #0a1628 100%);
-      border: 1px solid var(--border);
-      border-top: 2px solid var(--accent);
-      border-radius: 12px;
-      padding: 28px 32px;
-      margin-bottom: 32px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 24px;
+    .hero-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      display: flex;
       align-items: center;
-      min-height: 130px;
+      gap: 8px;
     }
-
-    .launch-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
-      color: var(--accent); font-size: 11px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase;
-      padding: 4px 10px; border-radius: 20px; margin-bottom: 10px;
-    }
-
-    .pulse {
-      width: 7px; height: 7px; background: var(--accent);
-      border-radius: 50%; animation: pulse 2s infinite;
+    .hero-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
     }
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .hero-title {
+      font-size: clamp(48px, 8vw, 80px);
+      font-weight: 200;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .hero-subtitle {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+      margin-bottom: 40px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .hero-sep {
+      color: var(--text-muted);
     }
 
-    .launch-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+    /* Timezone display */
+    .hero-timezone {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+      margin-bottom: 48px;
+    }
 
-    .launch-meta { display: flex; gap: 20px; flex-wrap: wrap; }
-    .meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-    .meta-item strong { color: var(--text); font-weight: 600; }
-    .meta-dot { width: 3px; height: 3px; background: var(--dim); border-radius: 50%; }
-
-    /* ── Countdown ── */
-    .countdown { display: flex; gap: 12px; }
-
-    .cd-unit { text-align: center; min-width: 56px; }
+    /* Countdown */
+    .countdown {
+      display: flex;
+      gap: 4px;
+      align-items: baseline;
+    }
+    .cd-block {
+      text-align: center;
+    }
     .cd-value {
-      font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1;
-      background: linear-gradient(180deg, #fff 0%, #94a3b8 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      font-family: 'Roboto Mono', monospace;
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1;
     }
-    .cd-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
-    .cd-sep { font-size: 28px; font-weight: 300; color: var(--dim); align-self: flex-start; padding-top: 2px; }
+    .cd-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .cd-sep {
+      font-family: 'Roboto Mono', monospace;
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 200;
+      color: var(--text-muted);
+      padding: 0 8px;
+    }
+
+    /* ── Loading / Error ── */
+    .skeleton {
+      background: rgba(255,255,255,0.04);
+      border-radius: 2px;
+      animation: shimmer 1.8s infinite;
+    }
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    .error-msg {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--red);
+      padding: 16px 0;
+      border: 1px solid rgba(248,113,113,0.15);
+      padding: 14px 20px;
+      margin-bottom: 16px;
+    }
 
     /* ── Flight Cards ── */
     .flights-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
     }
-
     .flight-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 20px;
-      transition: border-color 0.2s;
+      background: var(--bg);
+      padding: 28px;
+      transition: background 0.2s;
     }
-    .flight-card:hover { border-color: var(--accent); }
-    .flight-card.active { border-top: 2px solid var(--accent); }
-
-    .flight-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
-    .flight-num { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent2); margin-bottom: 4px; }
-    .flight-name { font-size: 16px; font-weight: 700; }
-
-    .status-pill {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
-      padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+    .flight-card:hover {
+      background: rgba(255,255,255,0.02);
     }
-    .status-upcoming   { background: rgba(59,130,246,0.15);  color: var(--accent);  border: 1px solid rgba(59,130,246,0.25); }
-    .status-net        { background: rgba(249,115,22,0.15);  color: var(--orange);  border: 1px solid rgba(249,115,22,0.25); }
-    .status-scrubbed   { background: rgba(239,68,68,0.15);   color: var(--red);     border: 1px solid rgba(239,68,68,0.25); }
-    .status-launched   { background: rgba(34,197,94,0.15);   color: var(--green);   border: 1px solid rgba(34,197,94,0.25); }
-    .status-success    { background: rgba(34,197,94,0.15);   color: var(--green);   border: 1px solid rgba(34,197,94,0.25); }
-    .status-stacking   { background: rgba(234,179,8,0.15);   color: var(--yellow);  border: 1px solid rgba(234,179,8,0.25); }
-    .status-production { background: rgba(100,116,139,0.15); color: var(--muted);   border: 1px solid rgba(100,116,139,0.2); }
-    .status-ready      { background: rgba(34,197,94,0.15);   color: var(--green);   border: 1px solid rgba(34,197,94,0.25); }
-    .status-stacked    { background: rgba(234,179,8,0.15);   color: var(--yellow);  border: 1px solid rgba(234,179,8,0.25); }
-
-    .hardware-row { display: flex; flex-direction: column; gap: 8px; }
-
-    .hw-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; background: var(--surface2); border-radius: 7px;
+    .flight-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
     }
-    .hw-icon { font-size: 18px; flex-shrink: 0; }
-    .hw-info { flex: 1; }
-    .hw-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-    .hw-detail { font-size: 11px; color: var(--muted); }
-
-    .hw-tag {
-      font-size: 10px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+    .flight-num {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
-    .tag-v3      { background: rgba(6,182,212,0.15);  color: var(--accent2); }
-    .tag-v2      { background: rgba(59,130,246,0.12); color: #7dd3fc; }
-    .tag-stacked { background: rgba(234,179,8,0.15);  color: var(--yellow); }
-    .tag-ready   { background: rgba(34,197,94,0.15);  color: var(--green); }
-
-    .flight-date {
-      margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; color: var(--muted);
+    .flight-name {
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: -0.01em;
     }
-    .flight-date strong { color: var(--text); }
+    /* Status: dot + text */
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green { background: var(--green); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-red { background: var(--red); }
+    .dot-gray { background: var(--gray); }
+    .dot-blue { background: var(--accent); }
+
+    /* Hardware rows in cards */
+    .hw-rows { display: flex; flex-direction: column; gap: 8px; }
+    .hw-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.02);
+    }
+    .hw-icon-char {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      min-width: 18px;
+      text-transform: uppercase;
+    }
+    .hw-serial {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .hw-note {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+    .hw-version {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .flight-date-row {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .flight-date-row strong {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
 
     /* ── Pipeline ── */
-    .pipeline { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-
-    @media (max-width: 700px) {
-      .pipeline { grid-template-columns: 1fr; }
-      .next-launch { grid-template-columns: 1fr; }
-      .countdown { justify-content: center; }
+    .pipeline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 32px;
     }
-
-    .pipeline-col {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 20px;
+    .pipeline-col h3 {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
     }
-    .pipeline-col h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-
     .pipeline-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 0; border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
     }
-    .pipeline-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .pipeline-item:first-child { padding-top: 0; }
+    .pipeline-item:nth-child(even) {
+      background: rgba(255,255,255,0.015);
+    }
+    .pipeline-item:last-child {
+      border-bottom: none;
+    }
+    .pipe-serial {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text);
+      min-width: 48px;
+    }
+    .pipe-info {
+      flex: 1;
+    }
+    .pipe-status-text {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+    .pipe-version {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .pipe-flight {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
 
-    .pipe-num { font-size: 15px; font-weight: 800; color: var(--accent); min-width: 28px; }
-    .pipe-info { flex: 1; }
-    .pipe-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
-    .pipe-status { font-size: 11px; color: var(--muted); }
-
-    .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
-    .progress-fill {
-      height: 100%; border-radius: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    /* Progress bar in pipeline */
+    .pipe-progress {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .pipe-progress-fill {
+      height: 100%;
+      background: var(--text-secondary);
       transition: width 0.6s ease;
-    }
-
-    .pipe-flight-tag {
-      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-      padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
     }
 
     /* ── Footer ── */
     footer {
-      border-top: 1px solid var(--border); padding-top: 20px; margin-top: 8px;
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; color: var(--muted);
+      margin-top: 80px;
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
     }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    .footer-text {
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .footer-attr {
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .footer-attr a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      transition: border-color 0.2s;
+    }
+    .footer-attr a:hover {
+      border-color: var(--text-secondary);
+    }
 
-    /* ── Skeleton placeholders ── */
-    .skel-banner-title { height: 34px; width: 260px; margin-bottom: 12px; }
-    .skel-banner-meta  { height: 18px; width: 380px; }
-    .skel-cd           { height: 48px; width: 240px; }
-    .skel-card         { height: 180px; }
-    .skel-pipe-item    { height: 56px; margin-bottom: 12px; }
+    /* ── Skeletons ── */
+    .skel-hero-title { height: 64px; width: 400px; max-width: 80%; margin-bottom: 16px; }
+    .skel-hero-sub   { height: 16px; width: 300px; max-width: 60%; margin-bottom: 48px; }
+    .skel-hero-cd    { height: 56px; width: 320px; max-width: 70%; }
+    .skel-card       { height: 200px; }
+    .skel-pipe       { height: 50px; margin-bottom: 1px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .wrapper { padding: 0 16px 60px; }
+      .hero { padding: 48px 0 40px; }
+      .pipeline { grid-template-columns: 1fr; gap: 48px; }
+      .flights-grid { grid-template-columns: 1fr; }
+      .nav-link { display: none; }
+      .countdown { gap: 2px; }
+      .cd-sep { padding: 0 4px; }
+      .hero-subtitle { flex-direction: column; gap: 4px; }
+      .hero-sep { display: none; }
+    }
   </style>
 </head>
 <body>
+
+<!-- Refresh progress bar -->
+<div id="refresh-bar"></div>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-light">STARSHIP</span><span class="logo-bold">WATCH</span>
+    </a>
+    <div class="nav-right">
+      <a href="#flights-section" class="nav-link">Flights</a>
+      <a href="#pipeline-section" class="nav-link">Hardware</a>
+      <span class="last-updated" id="last-updated">--:--:--</span>
+    </div>
+  </div>
+</nav>
+
 <div class="wrapper">
 
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🚀</div>
-      <h1>Starship<span>Watch</span></h1>
-    </div>
-    <div class="updated" id="last-updated">Loading…</div>
-  </header>
-
-  <!-- Next launch -->
-  <div class="section-title">Next Launch</div>
-  <div class="next-launch" id="banner">
-    <div>
-      <div class="skeleton skel-banner-title"></div>
-      <div class="skeleton skel-banner-meta"></div>
-    </div>
-    <div class="skeleton skel-cd"></div>
+  <!-- Hero / Next Launch -->
+  <div class="hero" id="banner">
+    <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
+    <div class="skeleton skel-hero-title"></div>
+    <div class="skeleton skel-hero-sub"></div>
+    <div class="skeleton skel-hero-cd"></div>
   </div>
 
-  <!-- Upcoming flights -->
-  <div class="section-title">Upcoming Flights</div>
-  <div id="error-flights" style="display:none" class="error-msg">⚠️ Could not load flights.</div>
+  <!-- Upcoming Flights -->
+  <div class="section-label" id="flights-section">UPCOMING FLIGHTS</div>
+  <div id="error-flights" style="display:none" class="error-msg">Could not load flights.</div>
   <div class="flights-grid" id="flights-grid">
     <div class="flight-card"><div class="skeleton skel-card"></div></div>
     <div class="flight-card"><div class="skeleton skel-card"></div></div>
   </div>
 
-  <!-- Pipeline -->
-  <div class="section-title">Hardware Pipeline</div>
-  <div id="error-pipeline" style="display:none" class="error-msg">⚠️ Could not load hardware pipeline.</div>
+  <!-- Hardware Pipeline -->
+  <div class="section-label" id="pipeline-section">HARDWARE PIPELINE</div>
+  <div id="error-pipeline" style="display:none" class="error-msg">Could not load hardware pipeline.</div>
   <div class="pipeline">
     <div class="pipeline-col" id="boosters-col">
-      <h3>🔥 Super Heavy Boosters</h3>
-      <div class="skeleton skel-pipe-item"></div>
-      <div class="skeleton skel-pipe-item"></div>
+      <h3>SUPER HEAVY BOOSTERS</h3>
+      <div class="skeleton skel-pipe"></div>
+      <div class="skeleton skel-pipe"></div>
     </div>
     <div class="pipeline-col" id="ships-col">
-      <h3>🛸 Starship Upper Stages</h3>
-      <div class="skeleton skel-pipe-item"></div>
-      <div class="skeleton skel-pipe-item"></div>
-      <div class="skeleton skel-pipe-item"></div>
+      <h3>STARSHIP VEHICLES</h3>
+      <div class="skeleton skel-pipe"></div>
+      <div class="skeleton skel-pipe"></div>
     </div>
   </div>
 
+  <!-- Footer -->
   <footer>
-    <span>Starship Watch — Fan-made tracker. Data sourced from SpaceX updates &amp; community reporting.</span>
-    <span id="footer-link"></span>
+    <div class="footer-text">STARSHIP WATCH &middot; NOT AFFILIATED WITH SPACEX</div>
+    <div class="footer-attr">Data sourced from community reporting &amp; <span id="footer-link"></span></div>
   </footer>
 
 </div>
@@ -346,6 +542,52 @@ const SUPABASE_ANON_KEY = 'SUPABASE_ANON_KEY_PLACEHOLDER';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── Timezone Helpers ─────────────────────────
+const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const launchSiteTZ = 'America/Chicago';
+
+function getTZAbbr(date, tz) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, timeZoneName: 'short'
+    }).formatToParts(date);
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    return tzPart ? tzPart.value : '';
+  } catch { return ''; }
+}
+
+function formatTimeInTZ(date, tz) {
+  return date.toLocaleTimeString('en-US', {
+    timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false
+  });
+}
+
+function formatDateUpper(date) {
+  return date.toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric'
+  }).toUpperCase();
+}
+
+function buildTimezoneString(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00-05:00');
+  if (isNaN(d)) return '';
+
+  const launchTime = formatTimeInTZ(d, launchSiteTZ);
+  const launchAbbr = getTZAbbr(d, launchSiteTZ);
+  const localTime  = formatTimeInTZ(d, userTZ);
+  const localAbbr  = getTZAbbr(d, userTZ);
+  const utcTime    = formatTimeInTZ(d, 'UTC');
+  const dateUpper  = formatDateUpper(d);
+
+  let str = `${dateUpper} · ${launchTime} ${launchAbbr} (LAUNCH SITE)`;
+  if (userTZ !== launchSiteTZ) {
+    str += ` · ${localTime} ${localAbbr} (YOUR TIME)`;
+  }
+  str += ` · ${utcTime} UTC`;
+  return str;
+}
+
 // ── Countdown ────────────────────────────────
 let countdownTarget = null;
 let countdownTimer  = null;
@@ -361,13 +603,13 @@ function startCountdown(dateStr) {
     if (!el) return;
 
     if (!countdownTarget) {
-      el.innerHTML = '<span style="font-size:14px;color:var(--muted)">Date TBD</span>';
+      el.innerHTML = '<span style="font-size:14px;font-weight:300;color:rgba(255,255,255,0.3)">DATE TBD</span>';
       return;
     }
 
     const diff = countdownTarget - Date.now();
     if (diff <= 0) {
-      el.innerHTML = '<span style="font-size:14px;color:var(--green)">T-0 — Launch window open</span>';
+      el.innerHTML = '<span style="font-size:14px;font-weight:300;color:var(--green)">T-0 — LAUNCH WINDOW OPEN</span>';
       return;
     }
 
@@ -377,13 +619,13 @@ function startCountdown(dateStr) {
     const secs  = Math.floor((diff % 60000)    / 1000);
 
     el.innerHTML = `
-      <div class="cd-unit"><div class="cd-value">${pad(days)}</div><div class="cd-label">Days</div></div>
+      <div class="cd-block"><div class="cd-value">${pad(days)}</div><div class="cd-label">DAYS</div></div>
       <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-value">${pad(hours)}</div><div class="cd-label">Hours</div></div>
+      <div class="cd-block"><div class="cd-value">${pad(hours)}</div><div class="cd-label">HOURS</div></div>
       <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-value">${pad(mins)}</div><div class="cd-label">Mins</div></div>
+      <div class="cd-block"><div class="cd-value">${pad(mins)}</div><div class="cd-label">MINS</div></div>
       <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-value">${pad(secs)}</div><div class="cd-label">Secs</div></div>
+      <div class="cd-block"><div class="cd-value">${pad(secs)}</div><div class="cd-label">SECS</div></div>
     `;
   }
 
@@ -391,44 +633,35 @@ function startCountdown(dateStr) {
   countdownTimer = setInterval(tick, 1000);
 }
 
-// ── Helpers ───────────────────────────────────
-const STATUS_PILL = {
-  upcoming:   'status-upcoming',
-  net:        'status-net',
-  scrubbed:   'status-scrubbed',
-  launched:   'status-launched',
-  success:    'status-success',
-  partial:    'status-launched',
-  failure:    'status-scrubbed',
-  planned:    'status-production',
-  production: 'status-production',
-  stacking:   'status-stacking',
-  stacked:    'status-stacked',
-  testing:    'status-stacking',
-  ready:      'status-ready',
-  retired:    'status-production',
-  destroyed:  'status-scrubbed',
+// ── Status Helpers ───────────────────────────
+const STATUS_DOT = {
+  upcoming:   'dot-blue',
+  net:        'dot-yellow',
+  scrubbed:   'dot-red',
+  launched:   'dot-green',
+  success:    'dot-green',
+  partial:    'dot-yellow',
+  failure:    'dot-red',
+  planned:    'dot-gray',
+  production: 'dot-gray',
+  stacking:   'dot-yellow',
+  stacked:    'dot-yellow',
+  testing:    'dot-yellow',
+  ready:      'dot-green',
+  retired:    'dot-gray',
+  destroyed:  'dot-red',
 };
 
-function pillHtml(status, label) {
-  const cls = STATUS_PILL[status] ?? 'status-upcoming';
-  return `<div class="status-pill ${cls}">${label ?? status}</div>`;
+function statusHtml(status, label) {
+  const dot = STATUS_DOT[status] ?? 'dot-gray';
+  return `<div class="status-indicator"><span class="status-dot ${dot}"></span>${label ?? status}</div>`;
 }
 
 function fmtDate(dateStr) {
   if (!dateStr) return 'TBD';
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function hwTagHtml(version) {
-  if (!version) return '';
-  const cls = version === 'v3' ? 'tag-v3' : 'tag-v2';
-  return `<div class="hw-tag ${cls}">${version}</div>`;
-}
-
-function statusTagHtml(status) {
-  const cls = STATUS_PILL[status] ?? 'status-production';
-  return `<div class="pipe-flight-tag ${cls}">${status}</div>`;
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric'
+  }).toUpperCase();
 }
 
 // ── Render: Banner ────────────────────────────
@@ -437,27 +670,30 @@ function renderBanner(row) {
 
   if (!row) {
     banner.innerHTML = `
-      <div>
-        <div class="launch-badge"><div class="pulse"></div>No upcoming flights</div>
-        <div class="launch-title">Stay tuned</div>
-      </div>`;
+      <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
+      <div class="hero-title">STAY TUNED</div>
+      <div class="hero-subtitle" style="color:var(--text-muted)">No upcoming flights scheduled</div>`;
     return;
   }
 
-  const netLabel = row.net_confirmed ? `NET ${fmtDate(row.net_date)}` : 'Date TBD';
+  const parts = [];
+  if (row.launch_site) parts.push(row.launch_site);
+  if (row.booster_serial) {
+    let b = row.booster_serial;
+    if (row.booster_version) b += ` (${row.booster_version})`;
+    parts.push(b);
+  }
+  if (row.ship_serial) parts.push(row.ship_serial);
+
+  const tzStr = buildTimezoneString(row.net_date);
 
   banner.innerHTML = `
-    <div>
-      <div class="launch-badge"><div class="pulse"></div>NET Launch</div>
-      <div class="launch-title">${row.name}</div>
-      <div class="launch-meta">
-        <div class="meta-item">📅 <strong>${fmtDate(row.net_date)}</strong></div>
-        ${row.booster_serial ? `<div class="meta-dot"></div><div class="meta-item">🔥 <strong>${row.booster_serial}</strong>${row.booster_version ? ` (${row.booster_version})` : ''}</div>` : ''}
-        ${row.ship_serial    ? `<div class="meta-dot"></div><div class="meta-item">🛸 <strong>${row.ship_serial}</strong></div>` : ''}
-        <div class="meta-dot"></div>
-        <div class="meta-item">📍 <strong>${row.launch_site}</strong></div>
-      </div>
+    <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
+    <div class="hero-title">${(row.name || '').toUpperCase()}</div>
+    <div class="hero-subtitle">
+      ${parts.map((p, i) => `<span>${p}</span>${i < parts.length - 1 ? '<span class="hero-sep">/</span>' : ''}`).join('')}
     </div>
+    ${tzStr ? `<div class="hero-timezone">${tzStr}</div>` : ''}
     <div class="countdown" id="countdown-el"></div>
   `;
 
@@ -465,7 +701,7 @@ function renderBanner(row) {
 
   if (row.spacex_url) {
     document.getElementById('footer-link').innerHTML =
-      `<a href="${row.spacex_url}" target="_blank">SpaceX mission page ↗</a>`;
+      `<a href="${row.spacex_url}" target="_blank">SpaceX mission page</a>`;
   }
 }
 
@@ -474,61 +710,55 @@ function renderFlights(flights, assignments) {
   const grid = document.getElementById('flights-grid');
 
   if (!flights.length) {
-    grid.innerHTML = '<p style="color:var(--muted);font-size:13px;">No upcoming flights found.</p>';
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:12px;font-weight:300;padding:32px;">No upcoming flights found.</p>';
+    grid.style.background = 'none';
+    grid.style.border = 'none';
     return;
   }
 
-  // Build a map: flight_id → { booster, ship }
   const hwMap = {};
   for (const a of assignments) {
     if (!a.is_primary) continue;
     hwMap[a.flight_id] = { booster: a.boosters, ship: a.ships };
   }
 
-  grid.innerHTML = flights.map((f, i) => {
+  grid.innerHTML = flights.map((f) => {
     const hw      = hwMap[f.id] ?? {};
     const booster = hw.booster;
     const ship    = hw.ship;
-    const isNext  = i === 0;
+    const statusLabel = f.status === 'net' ? `NET ${fmtDate(f.net_date)}` : f.status;
 
     const boosterHtml = booster ? `
-      <div class="hw-item">
-        <div class="hw-icon">🔥</div>
-        <div class="hw-info">
-          <div class="hw-name">${booster.serial}</div>
-          <div class="hw-detail">${booster.notes ?? ''}</div>
-        </div>
-        ${hwTagHtml(booster.version)}
+      <div class="hw-row">
+        <span class="hw-icon-char">B</span>
+        <span class="hw-serial">${booster.serial}</span>
+        ${booster.version ? `<span class="hw-version">${booster.version}</span>` : ''}
+        ${booster.notes ? `<span class="hw-note">${booster.notes}</span>` : ''}
       </div>` : '';
 
     const shipHtml = ship ? `
-      <div class="hw-item">
-        <div class="hw-icon">🛸</div>
-        <div class="hw-info">
-          <div class="hw-name">${ship.serial}</div>
-          <div class="hw-detail">${ship.notes ?? ''}</div>
-        </div>
-        <div class="hw-tag ${ship.status === 'ready' ? 'tag-ready' : 'tag-stacked'}">${ship.status}</div>
+      <div class="hw-row">
+        <span class="hw-icon-char">S</span>
+        <span class="hw-serial">${ship.serial}</span>
+        ${ship.notes ? `<span class="hw-note">${ship.notes}</span>` : ''}
       </div>` : '';
 
-    const dateLabel = f.status === 'net' ? 'NET Launch' : 'Estimated';
-
     return `
-      <div class="flight-card${isNext ? ' active' : ''}">
+      <div class="flight-card">
         <div class="flight-header">
           <div>
             <div class="flight-num">IFT-${f.flight_num}</div>
             <div class="flight-name">${f.name}</div>
           </div>
-          ${pillHtml(f.status, f.status === 'net' ? `NET ${fmtDate(f.net_date)}` : f.status)}
+          ${statusHtml(f.status, statusLabel)}
         </div>
-        <div class="hardware-row">
+        <div class="hw-rows">
           ${boosterHtml}
           ${shipHtml}
-          ${!boosterHtml && !shipHtml ? '<div style="font-size:12px;color:var(--muted);padding:8px 12px;">Hardware TBD</div>' : ''}
+          ${!boosterHtml && !shipHtml ? '<div class="hw-row" style="color:var(--text-muted);font-size:12px;font-weight:300;">Hardware TBD</div>' : ''}
         </div>
-        <div class="flight-date">
-          <span>${dateLabel}</span>
+        <div class="flight-date-row">
+          <span>${f.status === 'net' ? 'NET' : 'EST'}</span>
           <strong>${fmtDate(f.net_date)}</strong>
         </div>
       </div>`;
@@ -540,46 +770,76 @@ function renderPipeline(boosters, ships) {
   const bCol = document.getElementById('boosters-col');
   const sCol = document.getElementById('ships-col');
 
-  const pipeItem = (serial, name, statusStr, pct, flightNum, versionTag) => `
+  const pipeItem = (serial, statusStr, pct, flightNum, version) => `
     <div class="pipeline-item">
-      <div class="pipe-num">${serial}</div>
+      <div class="pipe-serial">${serial}</div>
       <div class="pipe-info">
-        <div class="pipe-name">${name}${versionTag ? ` <span style="color:var(--accent2);font-size:11px;">${versionTag}</span>` : ''}</div>
-        <div class="pipe-status">${statusStr}</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${statusHtml(statusStr, statusStr)}
+          ${version ? `<span class="pipe-version">${version}</span>` : ''}
+        </div>
+        <div class="pipe-progress"><div class="pipe-progress-fill" style="width:${pct ?? 0}%"></div></div>
       </div>
-      ${flightNum ? `${statusTagHtml('IFT-' + flightNum)}` : ''}
+      ${flightNum ? `<div class="pipe-flight">IFT-${flightNum}</div>` : ''}
     </div>`;
 
-  bCol.innerHTML = '<h3>🔥 Super Heavy Boosters</h3>' +
+  bCol.innerHTML = '<h3>SUPER HEAVY BOOSTERS</h3>' +
     (boosters.length
       ? boosters.map(b => pipeItem(
-          b.serial, b.serial,
-          b.notes ?? b.status,
+          b.serial,
+          b.status,
           b.progress_pct,
           b.flights?.flight_num,
           b.version
         )).join('')
-      : '<p style="font-size:12px;color:var(--muted);">No booster data.</p>');
+      : '<p style="font-size:12px;color:var(--text-muted);font-weight:300;">No data.</p>');
 
-  sCol.innerHTML = '<h3>🛸 Starship Upper Stages</h3>' +
+  sCol.innerHTML = '<h3>STARSHIP VEHICLES</h3>' +
     (ships.length
       ? ships.map(s => pipeItem(
-          s.serial, s.serial,
-          s.notes ?? s.status,
+          s.serial,
+          s.status,
           s.progress_pct,
           s.flights?.flight_num,
           null
         )).join('')
-      : '<p style="font-size:12px;color:var(--muted);">No ship data.</p>');
+      : '<p style="font-size:12px;color:var(--text-muted);font-weight:300;">No data.</p>');
+}
+
+// ── Auto-Refresh (60s) ───────────────────────
+const REFRESH_INTERVAL = 60; // seconds
+let refreshElapsed = 0;
+let refreshBarTimer = null;
+
+function updateRefreshBar() {
+  refreshElapsed++;
+  const pct = Math.min((refreshElapsed / REFRESH_INTERVAL) * 100, 100);
+  document.getElementById('refresh-bar').style.width = pct + '%';
+
+  if (refreshElapsed >= REFRESH_INTERVAL) {
+    refreshElapsed = 0;
+    document.getElementById('refresh-bar').style.transition = 'none';
+    document.getElementById('refresh-bar').style.width = '0%';
+    requestAnimationFrame(() => {
+      document.getElementById('refresh-bar').style.transition = 'width 1s linear';
+    });
+    loadAll();
+  }
+}
+
+function startRefreshBar() {
+  if (refreshBarTimer) clearInterval(refreshBarTimer);
+  refreshElapsed = 0;
+  document.getElementById('refresh-bar').style.width = '0%';
+  refreshBarTimer = setInterval(updateRefreshBar, 1000);
 }
 
 // ── Load everything ───────────────────────────
 async function loadAll() {
+  const now = new Date();
   document.getElementById('last-updated').textContent =
-    'Updated ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    'UPDATED ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
 
-  // Fire all queries in parallel
   const [bannerRes, flightsRes, assignRes, boostersRes, shipsRes] = await Promise.all([
     sb.from('next_launch').select('*').single(),
 
@@ -605,28 +865,31 @@ async function loadAll() {
   // Banner
   if (bannerRes.error) {
     document.getElementById('banner').innerHTML =
-      '<div class="error-msg">⚠️ Could not load next launch.</div>';
+      '<div class="error-msg">Could not load next launch data.</div>';
   } else {
     renderBanner(bannerRes.data);
   }
 
   // Flights
   if (flightsRes.error || assignRes.error) {
-    document.getElementById('error-flights').style.display = 'flex';
+    document.getElementById('error-flights').style.display = 'block';
     document.getElementById('flights-grid').innerHTML = '';
   } else {
+    document.getElementById('error-flights').style.display = 'none';
     renderFlights(flightsRes.data, assignRes.data);
   }
 
   // Pipeline
   if (boostersRes.error || shipsRes.error) {
-    document.getElementById('error-pipeline').style.display = 'flex';
+    document.getElementById('error-pipeline').style.display = 'block';
   } else {
+    document.getElementById('error-pipeline').style.display = 'none';
     renderPipeline(boostersRes.data, shipsRes.data);
   }
 }
 
 loadAll();
+startRefreshBar();
 </script>
 </body>
 </html>
