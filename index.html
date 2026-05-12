@@ -455,7 +455,69 @@
     .skel-card       { height: 200px; }
     .skel-pipe       { height: 50px; margin-bottom: 1px; }
 
+    /* ── Hero two-column layout ── */
+    .hero-inner {
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+    }
+    .hero-left {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .hero-right {
+      flex: 0 0 420px;
+      max-width: 420px;
+    }
+
+    /* Live stream label */
+    .live-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: #f87171;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* 16:9 responsive embed */
+    .embed-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+    }
+    .embed-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: block;
+    }
+
     /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .hero-inner {
+        flex-direction: column;
+        gap: 40px;
+      }
+      .hero-right {
+        flex: 1 1 auto;
+        max-width: 100%;
+        width: 100%;
+      }
+    }
     @media (max-width: 768px) {
       .wrapper { padding: 0 16px 60px; }
       .hero { padding: 48px 0 40px; }
@@ -668,11 +730,31 @@ function fmtDate(dateStr) {
 function renderBanner(row) {
   const banner = document.getElementById('banner');
 
+  const LIVE_STREAM_ID = 'mhJRzQsLZGg';
+
+  const embedHtml = `
+    <div class="live-label"><span class="live-dot"></span>LIVE STREAM</div>
+    <div class="embed-wrapper">
+      <iframe
+        src="https://www.youtube.com/embed/${LIVE_STREAM_ID}?autoplay=0&rel=0"
+        title="Starship Live Stream"
+        frameborder="0"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+    </div>
+  `;
+
   if (!row) {
     banner.innerHTML = `
-      <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
-      <div class="hero-title">STAY TUNED</div>
-      <div class="hero-subtitle" style="color:var(--text-muted)">No upcoming flights scheduled</div>`;
+      <div class="hero-inner">
+        <div class="hero-left">
+          <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
+          <div class="hero-title">STAY TUNED</div>
+          <div class="hero-subtitle" style="color:var(--text-muted)">No upcoming flights scheduled</div>
+        </div>
+        <div class="hero-right">${embedHtml}</div>
+      </div>`;
     return;
   }
 
@@ -688,13 +770,18 @@ function renderBanner(row) {
   const tzStr = buildTimezoneString(row.net_date);
 
   banner.innerHTML = `
-    <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
-    <div class="hero-title">${(row.name || '').toUpperCase()}</div>
-    <div class="hero-subtitle">
-      ${parts.map((p, i) => `<span>${p}</span>${i < parts.length - 1 ? '<span class="hero-sep">/</span>' : ''}`).join('')}
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
+        <div class="hero-title">${(row.name || '').toUpperCase()}</div>
+        <div class="hero-subtitle">
+          ${parts.map((p, i) => `<span>${p}</span>${i < parts.length - 1 ? '<span class="hero-sep">/</span>' : ''}`).join('')}
+        </div>
+        ${tzStr ? `<div class="hero-timezone">${tzStr}</div>` : ''}
+        <div class="countdown" id="countdown-el"></div>
+      </div>
+      <div class="hero-right">${embedHtml}</div>
     </div>
-    ${tzStr ? `<div class="hero-timezone">${tzStr}</div>` : ''}
-    <div class="countdown" id="countdown-el"></div>
   `;
 
   startCountdown(row.net_date);
