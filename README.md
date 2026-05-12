@@ -13,11 +13,11 @@ Here is a comprehensive README.md template tailored for **StarshipWatcher**.
 
 ***
 
-# StarshipWatcher 🚀
+# StarshipWatch 🚀
 
 **StarshipWatcher** is a real-time tracking dashboard for upcoming SpaceX Integrated Flight Tests (IFT). It provides the latest mission data, countdowns, and flight status by aggregating public API data into a centralized dashboard.
 
-**Live Demo:** [starshipwatcher.netlify.app](https://starshipwatcher.netlify.app)
+**Live Demo:** [starshipwatch.netlify.app](https://starshipwatch.netlify.app)
 
 ## 🛠 How It Works
 
