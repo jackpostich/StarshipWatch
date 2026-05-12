@@ -30,7 +30,6 @@ The application operates as a data pipeline to ensure high availability and low 
 
 ## 🏗 Tech Stack
 
-*   **Frontend:** [Insert Framework, e.g., React/Vue/Svelte]
 *   **Hosting:** [Netlify](https://www.netlify.com/)
 *   **Database:** [Supabase](https://supabase.com/)
 *   **Automation:** Netlify Functions / Edge Functions
