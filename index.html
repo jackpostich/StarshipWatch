@@ -107,6 +107,60 @@
       letter-spacing: 0.05em;
     }
 
+    /* ── Intelligence Ticker ── */
+    .intel-bar {
+      background: rgba(74,158,255,0.06);
+      border-bottom: 1px solid rgba(74,158,255,0.12);
+      padding: 0 24px;
+      overflow: hidden;
+    }
+    .intel-bar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 36px;
+      gap: 16px;
+    }
+    .intel-tag {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .intel-ticker {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    }
+    .intel-ticker-track {
+      display: flex;
+      gap: 48px;
+      animation: ticker 40s linear infinite;
+      white-space: nowrap;
+      width: max-content;
+    }
+    .intel-ticker-track:hover { animation-play-state: paused; }
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .intel-item {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-secondary);
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+    .intel-item span {
+      color: var(--text);
+      font-weight: 400;
+    }
+
     /* ── Section titles ── */
     .section-label {
       font-size: 10px;
@@ -159,7 +213,7 @@
       font-weight: 300;
       color: var(--text-secondary);
       letter-spacing: 0.05em;
-      margin-bottom: 40px;
+      margin-bottom: 16px;
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
@@ -169,14 +223,56 @@
       color: var(--text-muted);
     }
 
-    /* Timezone display */
-    .hero-timezone {
-      font-family: 'Roboto Mono', monospace;
+    /* Mission description */
+    .hero-mission-desc {
       font-size: 12px;
       font-weight: 300;
       color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+      max-width: 600px;
+    }
+
+    /* Mission meta pills */
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .meta-pill {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+    }
+    .meta-pill-accent {
+      color: var(--accent);
+      border-color: rgba(74,158,255,0.2);
+      background: rgba(74,158,255,0.06);
+    }
+    .meta-pill-green {
+      color: var(--green);
+      border-color: rgba(52,211,153,0.2);
+      background: rgba(52,211,153,0.06);
+    }
+
+    /* Timezone display */
+    .hero-timezone {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-muted);
       letter-spacing: 0.03em;
-      margin-bottom: 48px;
+      margin-bottom: 40px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.02);
+      border-left: 2px solid rgba(74,158,255,0.3);
+      display: inline-block;
     }
 
     /* Countdown */
@@ -226,7 +322,6 @@
       font-size: 12px;
       font-weight: 300;
       color: var(--red);
-      padding: 16px 0;
       border: 1px solid rgba(248,113,113,0.15);
       padding: 14px 20px;
       margin-bottom: 16px;
@@ -252,7 +347,7 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .flight-num {
       font-family: 'Roboto Mono', monospace;
@@ -290,6 +385,37 @@
     .dot-red { background: var(--red); }
     .dot-gray { background: var(--gray); }
     .dot-blue { background: var(--accent); }
+
+    /* Mission description in card */
+    .flight-mission-desc {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Mission meta in card */
+    .flight-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .flight-meta-tag {
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+    }
 
     /* Hardware rows in cards */
     .hw-rows { display: flex; flex-direction: column; gap: 8px; }
@@ -345,6 +471,16 @@
       font-weight: 400;
     }
 
+    /* Launch window bar */
+    .launch-window {
+      margin-top: 8px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
+
     /* ── Pipeline ── */
     .pipeline {
       display: grid;
@@ -369,12 +505,7 @@
       padding: 14px 0;
       border-bottom: 1px solid var(--border);
     }
-    .pipeline-item:nth-child(even) {
-      background: rgba(255,255,255,0.015);
-    }
-    .pipeline-item:last-child {
-      border-bottom: none;
-    }
+    .pipeline-item:last-child { border-bottom: none; }
     .pipe-serial {
       font-family: 'Roboto Mono', monospace;
       font-size: 14px;
@@ -418,6 +549,74 @@
       transition: width 0.6s ease;
     }
 
+    /* ── Community Feed ── */
+    .community-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .community-card {
+      background: var(--bg);
+      padding: 24px;
+      transition: background 0.2s;
+    }
+    .community-card:hover { background: rgba(255,255,255,0.02); }
+    .community-card-source {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .community-card-source::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .community-card-title {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .community-card-desc {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .community-card-link {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .community-card-link:hover { opacity: 0.7; }
+    .community-card-date {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
     /* ── Footer ── */
     footer {
       margin-top: 80px;
@@ -444,9 +643,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
       transition: border-color 0.2s;
     }
-    .footer-attr a:hover {
-      border-color: var(--text-secondary);
-    }
+    .footer-attr a:hover { border-color: var(--text-secondary); }
 
     /* ── Skeletons ── */
     .skel-hero-title { height: 64px; width: 400px; max-width: 80%; margin-bottom: 16px; }
@@ -470,8 +667,15 @@
       max-width: 420px;
     }
 
-    /* Live stream label */
-    .live-label {
+    /* Video section label */
+    .video-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .video-label-left {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -480,7 +684,6 @@
       letter-spacing: 0.25em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 12px;
     }
     .live-dot {
       width: 6px;
@@ -489,6 +692,30 @@
       border-radius: 50%;
       flex-shrink: 0;
       animation: pulse 1.5s infinite;
+    }
+    .live-dot-gray {
+      background: var(--text-muted);
+      animation: none;
+    }
+    .video-source-link {
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .video-source-link:hover { color: var(--text-secondary); }
+    .video-title-display {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 420px;
     }
 
     /* 16:9 responsive embed */
@@ -505,29 +732,70 @@
       border: 1px solid rgba(255,255,255,0.1);
       display: block;
     }
+    .embed-placeholder {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+    }
+    .embed-placeholder-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .embed-placeholder-text {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+    .watch-btn {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(74,158,255,0.3);
+      padding: 8px 16px;
+      transition: background 0.2s;
+    }
+    .watch-btn:hover { background: rgba(74,158,255,0.08); }
+
+    /* Volume indicator */
+    .muted-notice {
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      .hero-inner {
-        flex-direction: column;
-        gap: 40px;
-      }
-      .hero-right {
-        flex: 1 1 auto;
-        max-width: 100%;
-        width: 100%;
-      }
+      .hero-inner { flex-direction: column; gap: 40px; }
+      .hero-right { flex: 1 1 auto; max-width: 100%; width: 100%; }
+      .video-title-display { max-width: 100%; }
     }
     @media (max-width: 768px) {
       .wrapper { padding: 0 16px 60px; }
       .hero { padding: 48px 0 40px; }
       .pipeline { grid-template-columns: 1fr; gap: 48px; }
       .flights-grid { grid-template-columns: 1fr; }
+      .community-grid { grid-template-columns: 1fr; }
       .nav-link { display: none; }
       .countdown { gap: 2px; }
       .cd-sep { padding: 0 4px; }
       .hero-subtitle { flex-direction: column; gap: 4px; }
       .hero-sep { display: none; }
+      .intel-bar { display: none; }
     }
   </style>
 </head>
@@ -545,19 +813,62 @@
     <div class="nav-right">
       <a href="#flights-section" class="nav-link">Flights</a>
       <a href="#pipeline-section" class="nav-link">Hardware</a>
+      <a href="#intel-section" class="nav-link">Intel</a>
       <span class="last-updated" id="last-updated">--:--:--</span>
     </div>
   </div>
 </nav>
 
+<!-- Intelligence Ticker -->
+<div class="intel-bar">
+  <div class="intel-bar-inner">
+    <div class="intel-tag">INTEL</div>
+    <div class="intel-ticker">
+      <div class="intel-ticker-track" id="ticker-track">
+        <!-- Populated twice for seamless loop -->
+        <span class="intel-item"><span>IFT-12 GO FOR LAUNCH</span> · Flight 12 targets May 19, 2026 · Booster 19 + Ship 39 · Block 3 maiden flight · First launch from Pad 2</span>
+        <span class="intel-item"><span>IFT-12 PAYLOAD</span> · 22 Starlink V3 Mass Simulators (~44,000 kg) · 2 with heat-shield cameras · Suborbital trajectory · Indian Ocean splashdown</span>
+        <span class="intel-item"><span>IFT-12 OBJECTIVES</span> · Block 3 debut · Raptor engine relight in space · Heat shield tile removal test · Rear flap structural stress test · Dynamic banking maneuver</span>
+        <span class="intel-item"><span>IFT-13 OUTLOOK</span> · Projected June 2026 · Date/time TBD · Starbase TX · B18 replacement after November 2025 implosion during cryo test</span>
+        <span class="intel-item"><span>BLOCK 3 UPGRADES</span> · Raptor 3 engines · Integrated interstage · 3 grid fins (down from 4) · Target: 100+ mt to LEO reusable</span>
+        <span class="intel-item"><span>SUPERBIRD-9</span> · First commercial Starship payload · Japanese comsat · Projected June 2027 · Kennedy Space Center</span>
+        <!-- duplicate for seamless loop -->
+        <span class="intel-item"><span>IFT-12 GO FOR LAUNCH</span> · Flight 12 targets May 19, 2026 · Booster 19 + Ship 39 · Block 3 maiden flight · First launch from Pad 2</span>
+        <span class="intel-item"><span>IFT-12 PAYLOAD</span> · 22 Starlink V3 Mass Simulators (~44,000 kg) · 2 with heat-shield cameras · Suborbital trajectory · Indian Ocean splashdown</span>
+        <span class="intel-item"><span>IFT-12 OBJECTIVES</span> · Block 3 debut · Raptor engine relight in space · Heat shield tile removal test · Rear flap structural stress test · Dynamic banking maneuver</span>
+        <span class="intel-item"><span>IFT-13 OUTLOOK</span> · Projected June 2026 · Date/time TBD · Starbase TX · B18 replacement after November 2025 implosion during cryo test</span>
+        <span class="intel-item"><span>BLOCK 3 UPGRADES</span> · Raptor 3 engines · Integrated interstage · 3 grid fins (down from 4) · Target: 100+ mt to LEO reusable</span>
+        <span class="intel-item"><span>SUPERBIRD-9</span> · First commercial Starship payload · Japanese comsat · Projected June 2027 · Kennedy Space Center</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="wrapper">
 
   <!-- Hero / Next Launch -->
   <div class="hero" id="banner">
-    <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
-    <div class="skeleton skel-hero-title"></div>
-    <div class="skeleton skel-hero-sub"></div>
-    <div class="skeleton skel-hero-cd"></div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
+        <div class="skeleton skel-hero-title"></div>
+        <div class="skeleton skel-hero-sub"></div>
+        <div class="skeleton skel-hero-cd"></div>
+      </div>
+      <div class="hero-right">
+        <div class="video-label">
+          <div class="video-label-left">
+            <span class="live-dot live-dot-gray"></span>
+            <span>LOADING STREAM</span>
+          </div>
+        </div>
+        <div class="embed-placeholder">
+          <div class="embed-placeholder-inner">
+            <div class="embed-placeholder-text">LOADING VIDEO</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Upcoming Flights -->
@@ -584,10 +895,64 @@
     </div>
   </div>
 
+  <!-- Community Intel -->
+  <div class="section-label" id="intel-section">COMMUNITY INTELLIGENCE</div>
+  <div class="community-grid">
+
+    <div class="community-card">
+      <div class="community-card-source">NASASpaceflight.com</div>
+      <div class="community-card-title">Flight 12: Block 3 Nearing Launch</div>
+      <div class="community-card-desc">Block 3 Starship fully stacked on Pad 2 at Starbase. B19 and S39 represent significant redesigns across every element of the Starship architecture. First Block 3 booster features Raptor 3 engines, integrated interstage, and 3 grid fins instead of 4. Pad 1 conversion to Block 3 configuration ongoing.</div>
+      <a href="https://www.nasaspaceflight.com" target="_blank" class="community-card-link">→ NASASpaceflight.com</a>
+      <div class="community-card-date">May 2026</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">What About It? — YouTube</div>
+      <div class="community-card-title">IFT-12 Coverage & Analysis</div>
+      <div class="community-card-desc">Felix Schlang's What About It? channel provides in-depth pre-launch analysis, Starbase walkarounds, and speculative deep dives on Starship development. Essential viewing for understanding the Block 3 upgrades, Raptor 3 engine improvements, and what's next on the road to orbital flight.</div>
+      <a href="https://www.youtube.com/@WhatAboutIt" target="_blank" class="community-card-link">→ @WhatAboutIt on YouTube</a>
+      <div class="community-card-date">Ongoing</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">Mission Preview · IFT-12</div>
+      <div class="community-card-title">22 Starlink Simulators + Heat Shield Test</div>
+      <div class="community-card-desc">Primary payload: 22 Starlink V3 Mass Simulators (~44,000 kg). Two feature cameras to scan the heat shield. Several tiles painted white as imaging targets. One tile intentionally removed to measure aerodynamic load on adjacent tiles. Booster 19 targets Gulf of Mexico splashdown. Ship 39 targets Indian Ocean.</div>
+      <a href="https://www.spacex.com/launches/starship-flight-12" target="_blank" class="community-card-link">→ SpaceX Mission Page</a>
+      <div class="community-card-date">NET May 19, 2026 · 22:30 UTC</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">Looking Ahead · IFT-13</div>
+      <div class="community-card-title">Flight 13 Projected for June 2026</div>
+      <div class="community-card-desc">IFT-13 is projected for June 2026 but no date or time has been set. SpaceX is already preparing for its follow-on flight. The pace of flight tests is expected to accelerate significantly with the Block 3 production line ramping up and Pad 1 conversion ongoing for additional launch cadence.</div>
+      <a href="https://theorbitalwire.com/launches/ac897b9f-44d2-4ff4-8416-1a0a076e98a2/" target="_blank" class="community-card-link">→ The Orbital Wire</a>
+      <div class="community-card-date">June 2026 (TBD)</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">Commercial Milestone</div>
+      <div class="community-card-title">Superbird-9: First Commercial Payload</div>
+      <div class="community-card-desc">SKY Perfect JSAT's Superbird-9 Japanese communications satellite is manifested as the first commercial Starship payload. Launch is projected for June 2027 from Kennedy Space Center, FL. This marks Starship's transition from test flights to operational revenue launches, a critical milestone for SpaceX.</div>
+      <a href="https://www.spacelaunchschedule.com/launch/starship-superbird-9/" target="_blank" class="community-card-link">→ Mission Details</a>
+      <div class="community-card-date">June 2027 (Projected)</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">NASASpaceflight — Live Coverage</div>
+      <div class="community-card-title">Watch All Starship Launches Live</div>
+      <div class="community-card-desc">NASASpaceflight (NSF) provides industry-leading live coverage of every Starship test flight, with multiple camera angles, expert commentary, and real-time telemetry analysis. Their YouTube channel and website are the gold standard for Starship launch coverage.</div>
+      <a href="https://www.youtube.com/@NASASpaceflight" target="_blank" class="community-card-link">→ @NASASpaceflight on YouTube</a>
+      <div class="community-card-date">Live during all launches</div>
+    </div>
+
+  </div>
+
   <!-- Footer -->
   <footer>
     <div class="footer-text">STARSHIP WATCH &middot; NOT AFFILIATED WITH SPACEX</div>
-    <div class="footer-attr">Data sourced from community reporting &amp; <span id="footer-link"></span></div>
+    <div class="footer-attr">Data from <a href="https://ll.thespacedevs.com" target="_blank">The Space Devs LL2 API</a> &middot; Community intel from <a href="https://www.nasaspaceflight.com" target="_blank">NASASpaceflight</a> &amp; <a href="https://www.youtube.com/@WhatAboutIt" target="_blank">What About It?</a> &middot; <span id="footer-link"></span></div>
   </footer>
 
 </div>
@@ -596,13 +961,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // ─────────────────────────────────────────────
-// CONFIG — replace with your project values
+// CONFIG — replaced at build time by build.js
 // ─────────────────────────────────────────────
 const SUPABASE_URL      = 'SUPABASE_URL_PLACEHOLDER';
 const SUPABASE_ANON_KEY = 'SUPABASE_ANON_KEY_PLACEHOLDER';
 // ─────────────────────────────────────────────
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// NSF YouTube Channel
+const NSF_CHANNEL_ID = 'UCSUu1lih2RifWkKtDOJdsBA';
+const NSF_YOUTUBE_URL = 'https://www.youtube.com/@NASASpaceflight';
 
 // ── Timezone Helpers ─────────────────────────
 const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -630,9 +999,16 @@ function formatDateUpper(date) {
   }).toUpperCase();
 }
 
-function buildTimezoneString(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T12:00:00-05:00');
+function buildTimezoneString(launchTimeUtc, netDate) {
+  // Prefer full datetime if available, fall back to date only
+  let d;
+  if (launchTimeUtc) {
+    d = new Date(launchTimeUtc);
+  } else if (netDate) {
+    d = new Date(netDate + 'T12:00:00-05:00');
+  } else {
+    return '';
+  }
   if (isNaN(d)) return '';
 
   const launchTime = formatTimeInTZ(d, launchSiteTZ);
@@ -650,21 +1026,43 @@ function buildTimezoneString(dateStr) {
   return str;
 }
 
+function buildWindowString(windowStart, windowEnd) {
+  if (!windowStart || !windowEnd) return null;
+  try {
+    const ws = new Date(windowStart);
+    const we = new Date(windowEnd);
+    if (isNaN(ws) || isNaN(we)) return null;
+    const openUTC  = formatTimeInTZ(ws, 'UTC');
+    const closeUTC = formatTimeInTZ(we, 'UTC');
+    const openLocal  = formatTimeInTZ(ws, userTZ);
+    const closeLocal = formatTimeInTZ(we, userTZ);
+    const localAbbr  = getTZAbbr(ws, userTZ);
+    return `WINDOW ${openUTC}–${closeUTC} UTC · ${openLocal}–${closeLocal} ${localAbbr}`;
+  } catch { return null; }
+}
+
 // ── Countdown ────────────────────────────────
 let countdownTarget = null;
 let countdownTimer  = null;
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-function startCountdown(dateStr) {
+function startCountdown(launchTimeUtc, netDate) {
   if (countdownTimer) clearInterval(countdownTimer);
-  countdownTarget = dateStr ? new Date(dateStr + 'T12:00:00-05:00') : null;
+
+  if (launchTimeUtc) {
+    countdownTarget = new Date(launchTimeUtc);
+  } else if (netDate) {
+    countdownTarget = new Date(netDate + 'T12:00:00-05:00');
+  } else {
+    countdownTarget = null;
+  }
 
   function tick() {
     const el = document.getElementById('countdown-el');
     if (!el) return;
 
-    if (!countdownTarget) {
+    if (!countdownTarget || isNaN(countdownTarget)) {
       el.innerHTML = '<span style="font-size:14px;font-weight:300;color:rgba(255,255,255,0.3)">DATE TBD</span>';
       return;
     }
@@ -726,24 +1124,84 @@ function fmtDate(dateStr) {
   }).toUpperCase();
 }
 
+function fmtDatetime(isoStr) {
+  if (!isoStr) return null;
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d)) return null;
+    return d.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    }).toUpperCase() + ' · ' + formatTimeInTZ(d, 'UTC') + ' UTC';
+  } catch { return null; }
+}
+
+// ── NSF YouTube — fetch latest video via Netlify function ────────────────────
+async function fetchNSFVideo() {
+  try {
+    const res = await fetch('/.netlify/functions/get-nsf-video');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (e) {
+    console.warn('Could not fetch NSF video:', e.message);
+    return { videoId: null, title: null, isLive: false };
+  }
+}
+
 // ── Render: Banner ────────────────────────────
-function renderBanner(row) {
-  const banner = document.getElementById('banner');
+function buildEmbedHtml(videoData) {
+  const { videoId, title, isLive } = videoData || {};
 
-  const LIVE_STREAM_ID = 'mhJRzQsLZGg';
+  if (!videoId) {
+    return `
+      <div class="video-label">
+        <div class="video-label-left">
+          <span class="live-dot live-dot-gray"></span>
+          <span>NASASPACEFLIGHT</span>
+        </div>
+        <a href="${NSF_YOUTUBE_URL}" target="_blank" class="video-source-link">→ YouTube</a>
+      </div>
+      <div class="embed-placeholder">
+        <div class="embed-placeholder-inner">
+          <div class="embed-placeholder-text">No live stream detected</div>
+          <a href="${NSF_YOUTUBE_URL}" target="_blank" class="watch-btn">WATCH ON YOUTUBE →</a>
+        </div>
+      </div>`;
+  }
 
-  const embedHtml = `
-    <div class="live-label"><span class="live-dot"></span>LIVE STREAM</div>
+  const dotClass = isLive ? 'live-dot' : 'live-dot live-dot-gray';
+  const labelText = isLive ? 'LIVE · NASASPACEFLIGHT' : 'LATEST · NASASPACEFLIGHT';
+  const titleHtml = title
+    ? `<div class="video-title-display">${escHtml(title)}</div>`
+    : '';
+
+  return `
+    <div class="video-label">
+      <div class="video-label-left">
+        <span class="${dotClass}"></span>
+        <span>${labelText}</span>
+      </div>
+      <a href="${NSF_YOUTUBE_URL}" target="_blank" class="video-source-link">→ Channel</a>
+    </div>
+    ${titleHtml}
     <div class="embed-wrapper">
       <iframe
-        src="https://www.youtube.com/embed/${LIVE_STREAM_ID}?autoplay=0&rel=0"
-        title="Starship Live Stream"
+        src="https://www.youtube.com/embed/${escHtml(videoId)}?autoplay=1&mute=1&rel=0&modestbranding=1"
+        title="NASASpaceflight"
         frameborder="0"
-        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
       ></iframe>
     </div>
-  `;
+    <div class="muted-notice">▶ Autoplaying muted · Click to unmute</div>`;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderBanner(row, videoData) {
+  const banner = document.getElementById('banner');
 
   if (!row) {
     banner.innerHTML = `
@@ -753,7 +1211,7 @@ function renderBanner(row) {
           <div class="hero-title">STAY TUNED</div>
           <div class="hero-subtitle" style="color:var(--text-muted)">No upcoming flights scheduled</div>
         </div>
-        <div class="hero-right">${embedHtml}</div>
+        <div class="hero-right">${buildEmbedHtml(videoData)}</div>
       </div>`;
     return;
   }
@@ -767,28 +1225,45 @@ function renderBanner(row) {
   }
   if (row.ship_serial) parts.push(row.ship_serial);
 
-  const tzStr = buildTimezoneString(row.net_date);
+  const tzStr     = buildTimezoneString(row.launch_time_utc, row.net_date);
+  const winStr    = buildWindowString(row.window_start, row.window_end);
+  const missionDesc = row.mission_description || null;
+  const orbit       = row.orbit || null;
+  const missionType = row.mission_type || null;
+  const statusLabel = row.status === 'net' ? `NET ${fmtDate(row.net_date)}` : (row.status || 'UPCOMING');
+
+  // Meta pills
+  const pills = [];
+  if (row.status === 'net' || row.net_confirmed) {
+    pills.push(`<span class="meta-pill meta-pill-green">GO FOR LAUNCH</span>`);
+  }
+  if (orbit)        pills.push(`<span class="meta-pill">${escHtml(orbit)}</span>`);
+  if (missionType)  pills.push(`<span class="meta-pill">${escHtml(missionType)}</span>`);
+  if (row.booster_version) pills.push(`<span class="meta-pill meta-pill-accent">${escHtml(row.booster_version)}</span>`);
 
   banner.innerHTML = `
     <div class="hero-inner">
       <div class="hero-left">
         <div class="hero-label"><div class="hero-dot"></div> NEXT LAUNCH</div>
-        <div class="hero-title">${(row.name || '').toUpperCase()}</div>
+        <div class="hero-title">${escHtml((row.name || '').toUpperCase())}</div>
         <div class="hero-subtitle">
-          ${parts.map((p, i) => `<span>${p}</span>${i < parts.length - 1 ? '<span class="hero-sep">/</span>' : ''}`).join('')}
+          ${parts.map((p, i) => `<span>${escHtml(p)}</span>${i < parts.length - 1 ? '<span class="hero-sep">/</span>' : ''}`).join('')}
         </div>
-        ${tzStr ? `<div class="hero-timezone">${tzStr}</div>` : ''}
+        ${pills.length ? `<div class="hero-meta">${pills.join('')}</div>` : ''}
+        ${missionDesc ? `<div class="hero-mission-desc">${escHtml(missionDesc)}</div>` : ''}
+        ${tzStr ? `<div class="hero-timezone">${escHtml(tzStr)}</div>` : ''}
+        ${winStr ? `<div class="hero-timezone" style="margin-top:-12px;font-size:10px;">${escHtml(winStr)}</div>` : ''}
         <div class="countdown" id="countdown-el"></div>
       </div>
-      <div class="hero-right">${embedHtml}</div>
+      <div class="hero-right">${buildEmbedHtml(videoData)}</div>
     </div>
   `;
 
-  startCountdown(row.net_date);
+  startCountdown(row.launch_time_utc, row.net_date);
 
   if (row.spacex_url) {
     document.getElementById('footer-link').innerHTML =
-      `<a href="${row.spacex_url}" target="_blank">SpaceX mission page</a>`;
+      `<a href="${escHtml(row.spacex_url)}" target="_blank">SpaceX mission page</a>`;
   }
 }
 
@@ -815,19 +1290,28 @@ function renderFlights(flights, assignments) {
     const ship    = hw.ship;
     const statusLabel = f.status === 'net' ? `NET ${fmtDate(f.net_date)}` : f.status;
 
+    // Meta tags
+    const metaTags = [];
+    if (f.orbit)        metaTags.push(escHtml(f.orbit));
+    if (f.mission_type) metaTags.push(escHtml(f.mission_type));
+    if (f.payload_description) metaTags.push(escHtml(f.payload_description.slice(0, 30)));
+
+    // Launch time display
+    const launchTimeStr = fmtDatetime(f.launch_time_utc);
+
     const boosterHtml = booster ? `
       <div class="hw-row">
         <span class="hw-icon-char">B</span>
-        <span class="hw-serial">${booster.serial}</span>
-        ${booster.version ? `<span class="hw-version">${booster.version}</span>` : ''}
-        ${booster.notes ? `<span class="hw-note">${booster.notes}</span>` : ''}
+        <span class="hw-serial">${escHtml(booster.serial)}</span>
+        ${booster.version ? `<span class="hw-version">${escHtml(booster.version)}</span>` : ''}
+        ${booster.notes ? `<span class="hw-note">${escHtml(booster.notes)}</span>` : ''}
       </div>` : '';
 
     const shipHtml = ship ? `
       <div class="hw-row">
         <span class="hw-icon-char">S</span>
-        <span class="hw-serial">${ship.serial}</span>
-        ${ship.notes ? `<span class="hw-note">${ship.notes}</span>` : ''}
+        <span class="hw-serial">${escHtml(ship.serial)}</span>
+        ${ship.notes ? `<span class="hw-note">${escHtml(ship.notes)}</span>` : ''}
       </div>` : '';
 
     return `
@@ -835,10 +1319,12 @@ function renderFlights(flights, assignments) {
         <div class="flight-header">
           <div>
             <div class="flight-num">IFT-${f.flight_num}</div>
-            <div class="flight-name">${f.name}</div>
+            <div class="flight-name">${escHtml(f.name)}</div>
           </div>
           ${statusHtml(f.status, statusLabel)}
         </div>
+        ${f.mission_description ? `<div class="flight-mission-desc">${escHtml(f.mission_description)}</div>` : ''}
+        ${metaTags.length ? `<div class="flight-meta-row">${metaTags.map(t => `<span class="flight-meta-tag">${t}</span>`).join('')}</div>` : ''}
         <div class="hw-rows">
           ${boosterHtml}
           ${shipHtml}
@@ -846,7 +1332,7 @@ function renderFlights(flights, assignments) {
         </div>
         <div class="flight-date-row">
           <span>${f.status === 'net' ? 'NET' : 'EST'}</span>
-          <strong>${fmtDate(f.net_date)}</strong>
+          <strong>${launchTimeStr || fmtDate(f.net_date)}</strong>
         </div>
       </div>`;
   }).join('');
@@ -859,11 +1345,11 @@ function renderPipeline(boosters, ships) {
 
   const pipeItem = (serial, statusStr, pct, flightNum, version) => `
     <div class="pipeline-item">
-      <div class="pipe-serial">${serial}</div>
+      <div class="pipe-serial">${escHtml(serial)}</div>
       <div class="pipe-info">
         <div style="display:flex;align-items:center;gap:8px;">
           ${statusHtml(statusStr, statusStr)}
-          ${version ? `<span class="pipe-version">${version}</span>` : ''}
+          ${version ? `<span class="pipe-version">${escHtml(version)}</span>` : ''}
         </div>
         <div class="pipe-progress"><div class="pipe-progress-fill" style="width:${pct ?? 0}%"></div></div>
       </div>
@@ -872,29 +1358,17 @@ function renderPipeline(boosters, ships) {
 
   bCol.innerHTML = '<h3>SUPER HEAVY BOOSTERS</h3>' +
     (boosters.length
-      ? boosters.map(b => pipeItem(
-          b.serial,
-          b.status,
-          b.progress_pct,
-          b.flights?.flight_num,
-          b.version
-        )).join('')
+      ? boosters.map(b => pipeItem(b.serial, b.status, b.progress_pct, b.flights?.flight_num, b.version)).join('')
       : '<p style="font-size:12px;color:var(--text-muted);font-weight:300;">No data.</p>');
 
   sCol.innerHTML = '<h3>STARSHIP VEHICLES</h3>' +
     (ships.length
-      ? ships.map(s => pipeItem(
-          s.serial,
-          s.status,
-          s.progress_pct,
-          s.flights?.flight_num,
-          null
-        )).join('')
+      ? ships.map(s => pipeItem(s.serial, s.status, s.progress_pct, s.flights?.flight_num, null)).join('')
       : '<p style="font-size:12px;color:var(--text-muted);font-weight:300;">No data.</p>');
 }
 
 // ── Auto-Refresh (60s) ───────────────────────
-const REFRESH_INTERVAL = 60; // seconds
+const REFRESH_INTERVAL = 60;
 let refreshElapsed = 0;
 let refreshBarTimer = null;
 
@@ -927,11 +1401,21 @@ async function loadAll() {
   document.getElementById('last-updated').textContent =
     'UPDATED ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
 
-  const [bannerRes, flightsRes, assignRes, boostersRes, shipsRes] = await Promise.all([
+  // Fetch NSF video and Supabase data in parallel
+  const [
+    nsfVideoData,
+    bannerRes,
+    flightsRes,
+    assignRes,
+    boostersRes,
+    shipsRes
+  ] = await Promise.all([
+    fetchNSFVideo(),
+
     sb.from('next_launch').select('*').single(),
 
     sb.from('flights')
-      .select('id, flight_num, name, status, net_date, net_confirmed')
+      .select('id, flight_num, name, status, net_date, net_confirmed, launch_time_utc, window_start, window_end, mission_description, mission_type, orbit, payload_description')
       .in('status', ['upcoming', 'net'])
       .order('net_date', { ascending: true, nullsFirst: false })
       .order('flight_num', { ascending: true }),
@@ -954,7 +1438,7 @@ async function loadAll() {
     document.getElementById('banner').innerHTML =
       '<div class="error-msg">Could not load next launch data.</div>';
   } else {
-    renderBanner(bannerRes.data);
+    renderBanner(bannerRes.data, nsfVideoData);
   }
 
   // Flights

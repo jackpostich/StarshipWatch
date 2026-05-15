@@ -3,11 +3,24 @@
  *
  * Scheduled Netlify Function — runs every hour.
  * Fetches upcoming Starship launches from The Space Devs API (LL2)
- * and updates the `flights` table in Supabase with live NET dates and statuses.
+ * and updates the `flights` table in Supabase with live NET dates, statuses,
+ * and extended mission data (description, payload, orbit, launch window).
  *
  * Required env vars (set in Netlify → Site config → Environment variables):
  *   SUPABASE_URL              — your project URL
  *   SUPABASE_SERVICE_ROLE_KEY — secret service role key (NOT the anon key)
+ *
+ * Optional schema columns (add to `flights` table to unlock enhanced display):
+ *   launch_site        TEXT
+ *   spacex_url         TEXT
+ *   launch_time_utc    TIMESTAMPTZ   — full NET datetime
+ *   window_start       TIMESTAMPTZ
+ *   window_end         TIMESTAMPTZ
+ *   mission_description TEXT
+ *   mission_type       TEXT
+ *   orbit              TEXT
+ *   payload_description TEXT
+ *   payload_mass_kg    NUMERIC
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -38,8 +51,14 @@ function mapStatus(abbrev) {
 //    "Starship | Flight Test 12"
 // ────────────────────────────────────────────────────────────────────────────
 function parseFlightNum(name) {
-  const match = name.match(/[Ff]light\s+[Tt]est\s+(\d+)/);
+  const match = name.match(/[Ff]light(?:\s+[Tt]est)?\s+(\d+)/);
   return match ? parseInt(match[1], 10) : null;
+}
+
+// ── Truncate text to a maximum length ────────────────────────────────────────
+function truncate(str, maxLen = 500) {
+  if (!str) return null;
+  return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
@@ -86,29 +105,75 @@ exports.handler = async function () {
       continue;
     }
 
-    const statusAbbrev  = launch.status?.abbrev ?? 'TBD';
-    const flightStatus  = mapStatus(statusAbbrev);
-    const netDate       = launch.net ? launch.net.split('T')[0] : null;
-    const netConfirmed  = ['Go', 'TBC'].includes(statusAbbrev);
-    const spacexUrl     = launch.url ?? null;
+    const statusAbbrev = launch.status?.abbrev ?? 'TBD';
+    const flightStatus = mapStatus(statusAbbrev);
+    const netDate      = launch.net ? launch.net.split('T')[0] : null;
+    const netConfirmed = ['Go', 'TBC'].includes(statusAbbrev);
+    const spacexUrl    = launch.url ?? null;
 
-    const { error } = await sb
+    // ── Extended mission data from LL2 ──────────────────────────────────
+    const launchTimeUtc    = launch.net ?? null;
+    const windowStart      = launch.window_start ?? null;
+    const windowEnd        = launch.window_end ?? null;
+    const launchSite       = launch.pad?.location?.name
+      ? `${launch.pad.name}, ${launch.pad.location?.name}`
+      : (launch.pad?.name ?? null);
+    const missionDesc      = truncate(launch.mission?.description ?? null);
+    const missionType      = launch.mission?.type ?? null;
+    const orbit            = launch.mission?.orbit?.name ?? null;
+
+    // Payload: LL2 doesn't always expose individual payload mass, but we can
+    // construct a description from mission info
+    const payloadDesc = launch.mission?.name
+      ? launch.mission.name !== launch.name.split('|')[0]?.trim()
+        ? launch.mission.name
+        : null
+      : null;
+
+    // ── Build update payload ─────────────────────────────────────────────
+    // Core fields — always present in schema
+    const coreUpdate = {
+      status:        flightStatus,
+      net_date:      netDate,
+      net_confirmed: netConfirmed,
+      spacex_url:    spacexUrl,
+      launch_site:   launchSite,
+    };
+
+    // Extended fields — only present if schema has been updated
+    const extendedUpdate = {
+      launch_time_utc:     launchTimeUtc,
+      window_start:        windowStart,
+      window_end:          windowEnd,
+      mission_description: missionDesc,
+      mission_type:        missionType,
+      orbit:               orbit,
+      payload_description: payloadDesc,
+    };
+
+    // Try to update with all fields; if extended fields fail, fall back to core
+    let error;
+
+    ({ error } = await sb
       .from('flights')
-      .update({
-        status:        flightStatus,
-        net_date:      netDate,
-        net_confirmed: netConfirmed,
-        spacex_url:    spacexUrl,
-      })
-      .eq('flight_num', flightNum);
+      .update({ ...coreUpdate, ...extendedUpdate })
+      .eq('flight_num', flightNum));
 
     if (error) {
-      // Flight may not exist in our DB yet — log but don't crash
+      // Possibly missing extended columns — retry with core fields only
+      console.warn(`Full update failed for IFT-${flightNum} (${error.message}), retrying with core fields only`);
+      ({ error } = await sb
+        .from('flights')
+        .update(coreUpdate)
+        .eq('flight_num', flightNum));
+    }
+
+    if (error) {
       console.warn(`Could not update flight ${flightNum}: ${error.message}`);
       results.push({ flightNum, ok: false, error: error.message });
     } else {
-      console.log(`Updated IFT-${flightNum}: status=${flightStatus}, net=${netDate ?? 'TBD'}, confirmed=${netConfirmed}`);
-      results.push({ flightNum, ok: true, status: flightStatus, net: netDate });
+      console.log(`Updated IFT-${flightNum}: status=${flightStatus}, net=${netDate ?? 'TBD'}, orbit=${orbit ?? '-'}`);
+      results.push({ flightNum, ok: true, status: flightStatus, net: netDate, orbit });
     }
   }
 
