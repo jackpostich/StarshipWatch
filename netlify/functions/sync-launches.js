@@ -3,24 +3,7 @@
  *
  * Scheduled Netlify Function — runs every hour.
  * Fetches upcoming Starship launches from The Space Devs API (LL2)
- * and updates the `flights` table in Supabase with live NET dates, statuses,
- * and extended mission data (description, payload, orbit, launch window).
- *
- * Required env vars (set in Netlify → Site config → Environment variables):
- *   SUPABASE_URL              — your project URL
- *   SUPABASE_SERVICE_ROLE_KEY — secret service role key (NOT the anon key)
- *
- * Optional schema columns (add to `flights` table to unlock enhanced display):
- *   launch_site        TEXT
- *   spacex_url         TEXT
- *   launch_time_utc    TIMESTAMPTZ   — full NET datetime
- *   window_start       TIMESTAMPTZ
- *   window_end         TIMESTAMPTZ
- *   mission_description TEXT
- *   mission_type       TEXT
- *   orbit              TEXT
- *   payload_description TEXT
- *   payload_mass_kg    NUMERIC
+ * and updates the `flights` table in Supabase.
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -30,7 +13,10 @@ const LL2_URL = 'https://ll.thespacedevs.com/2.2.0/launch/upcoming/'
   + '&limit=10'
   + '&ordering=net';
 
-// ── Map LL2 status abbreviations to our flight_status enum ──────────────────
+const FETCH_TIMEOUT_MS = 10_000;
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 1_000;
+
 const STATUS_MAP = {
   'Go':              'net',
   'TBC':             'net',
@@ -46,22 +32,69 @@ function mapStatus(abbrev) {
   return STATUS_MAP[abbrev] ?? 'upcoming';
 }
 
-// ── Parse flight number from names like:
-//    "Starship | Integrated Flight Test 12"
-//    "Starship | Flight Test 12"
-// ────────────────────────────────────────────────────────────────────────────
+// Match: "Flight Test 12", "Integrated Flight Test 12", "IFT-12", "IFT 12", "Flight 12"
 function parseFlightNum(name) {
-  const match = name.match(/[Ff]light(?:\s+[Tt]est)?\s+(\d+)/);
-  return match ? parseInt(match[1], 10) : null;
+  if (!name || typeof name !== 'string') return null;
+  const patterns = [
+    /\bIFT[-\s]?(\d+)\b/i,
+    /\b(?:Integrated\s+)?Flight(?:\s+Test)?\s+(\d+)\b/i,
+  ];
+  for (const re of patterns) {
+    const m = name.match(re);
+    if (m) return parseInt(m[1], 10);
+  }
+  return null;
 }
 
-// ── Truncate text to a maximum length ────────────────────────────────────────
 function truncate(str, maxLen = 500) {
   if (!str) return null;
   return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
 }
 
-// ── Main handler ─────────────────────────────────────────────────────────────
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function fetchWithTimeout(url, opts = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchLL2WithRetry() {
+  let lastErr;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetchWithTimeout(LL2_URL, {
+        headers: { 'User-Agent': 'starship-watch/1.0 (fan tracker)' },
+      });
+      if (res.status === 429 || res.status >= 500) {
+        throw new Error(`LL2 transient ${res.status}: ${res.statusText}`);
+      }
+      if (!res.ok) {
+        throw new Error(`LL2 responded with ${res.status}: ${res.statusText}`);
+      }
+      const data = await res.json();
+      if (!data || !Array.isArray(data.results)) {
+        throw new Error('LL2 response missing results array');
+      }
+      return data.results;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < MAX_RETRIES) {
+        const delay = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
+        console.warn(`LL2 fetch attempt ${attempt} failed (${err.message}); retrying in ${delay}ms`);
+        await sleep(delay);
+      }
+    }
+  }
+  throw lastErr;
+}
+
 exports.handler = async function () {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
@@ -72,19 +105,9 @@ exports.handler = async function () {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  // ── Fetch from LL2 ──────────────────────────────────────────────────────
   let launches;
   try {
-    const res = await fetch(LL2_URL, {
-      headers: { 'User-Agent': 'starship-watch/1.0 (fan tracker)' },
-    });
-
-    if (!res.ok) {
-      throw new Error(`LL2 responded with ${res.status}: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    launches = data.results ?? [];
+    launches = await fetchLL2WithRetry();
   } catch (err) {
     console.error('Failed to fetch from LL2:', err.message);
     return { statusCode: 502, body: `LL2 fetch error: ${err.message}` };
@@ -95,10 +118,14 @@ exports.handler = async function () {
     return { statusCode: 200, body: JSON.stringify({ synced: 0 }) };
   }
 
-  // ── Sync each launch into Supabase ──────────────────────────────────────
   const results = [];
 
   for (const launch of launches) {
+    if (!launch || typeof launch !== 'object') {
+      console.warn('Skipping malformed launch entry');
+      continue;
+    }
+
     const flightNum = parseFlightNum(launch.name);
     if (!flightNum) {
       console.warn(`Could not parse flight number from: "${launch.name}" — skipping`);
@@ -107,31 +134,26 @@ exports.handler = async function () {
 
     const statusAbbrev = launch.status?.abbrev ?? 'TBD';
     const flightStatus = mapStatus(statusAbbrev);
-    const netDate      = launch.net ? launch.net.split('T')[0] : null;
+    const netDate      = typeof launch.net === 'string' ? launch.net.split('T')[0] : null;
     const netConfirmed = ['Go', 'TBC'].includes(statusAbbrev);
     const spacexUrl    = launch.url ?? null;
 
-    // ── Extended mission data from LL2 ──────────────────────────────────
     const launchTimeUtc    = launch.net ?? null;
     const windowStart      = launch.window_start ?? null;
     const windowEnd        = launch.window_end ?? null;
     const launchSite       = launch.pad?.location?.name
-      ? `${launch.pad.name}, ${launch.pad.location?.name}`
+      ? `${launch.pad.name}, ${launch.pad.location.name}`
       : (launch.pad?.name ?? null);
     const missionDesc      = truncate(launch.mission?.description ?? null);
     const missionType      = launch.mission?.type ?? null;
     const orbit            = launch.mission?.orbit?.name ?? null;
 
-    // Payload: LL2 doesn't always expose individual payload mass, but we can
-    // construct a description from mission info
     const payloadDesc = launch.mission?.name
       ? launch.mission.name !== launch.name.split('|')[0]?.trim()
         ? launch.mission.name
         : null
       : null;
 
-    // ── Build update payload ─────────────────────────────────────────────
-    // Core fields — always present in schema
     const coreUpdate = {
       status:        flightStatus,
       net_date:      netDate,
@@ -140,7 +162,6 @@ exports.handler = async function () {
       launch_site:   launchSite,
     };
 
-    // Extended fields — only present if schema has been updated
     const extendedUpdate = {
       launch_time_utc:     launchTimeUtc,
       window_start:        windowStart,
@@ -151,16 +172,13 @@ exports.handler = async function () {
       payload_description: payloadDesc,
     };
 
-    // Try to update with all fields; if extended fields fail, fall back to core
     let error;
-
     ({ error } = await sb
       .from('flights')
       .update({ ...coreUpdate, ...extendedUpdate })
       .eq('flight_num', flightNum));
 
     if (error) {
-      // Possibly missing extended columns — retry with core fields only
       console.warn(`Full update failed for IFT-${flightNum} (${error.message}), retrying with core fields only`);
       ({ error } = await sb
         .from('flights')

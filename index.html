@@ -802,10 +802,10 @@
 <body>
 
 <!-- Refresh progress bar -->
-<div id="refresh-bar"></div>
+<div id="refresh-bar" role="presentation" aria-hidden="true"></div>
 
 <!-- Navigation -->
-<nav>
+<nav aria-label="Primary">
   <div class="nav-inner">
     <a href="#" class="logo">
       <span class="logo-light">STARSHIP</span><span class="logo-bold">WATCH</span>
@@ -814,13 +814,13 @@
       <a href="#flights-section" class="nav-link">Flights</a>
       <a href="#pipeline-section" class="nav-link">Hardware</a>
       <a href="#intel-section" class="nav-link">Intel</a>
-      <span class="last-updated" id="last-updated">--:--:--</span>
+      <span class="last-updated" id="last-updated" aria-live="polite">--:--:--</span>
     </div>
   </div>
 </nav>
 
 <!-- Intelligence Ticker -->
-<div class="intel-bar">
+<div class="intel-bar" aria-label="Mission intelligence ticker">
   <div class="intel-bar-inner">
     <div class="intel-tag">INTEL</div>
     <div class="intel-ticker">
@@ -873,7 +873,7 @@
 
   <!-- Upcoming Flights -->
   <div class="section-label" id="flights-section">UPCOMING FLIGHTS</div>
-  <div id="error-flights" style="display:none" class="error-msg">Could not load flights.</div>
+  <div id="error-flights" style="display:none" class="error-msg" role="alert">Could not load flights.</div>
   <div class="flights-grid" id="flights-grid">
     <div class="flight-card"><div class="skeleton skel-card"></div></div>
     <div class="flight-card"><div class="skeleton skel-card"></div></div>
@@ -881,7 +881,7 @@
 
   <!-- Hardware Pipeline -->
   <div class="section-label" id="pipeline-section">HARDWARE PIPELINE</div>
-  <div id="error-pipeline" style="display:none" class="error-msg">Could not load hardware pipeline.</div>
+  <div id="error-pipeline" style="display:none" class="error-msg" role="alert">Could not load hardware pipeline.</div>
   <div class="pipeline">
     <div class="pipeline-col" id="boosters-col">
       <h3>SUPER HEAVY BOOSTERS</h3>
@@ -1070,6 +1070,7 @@ function startCountdown(launchTimeUtc, netDate) {
     const diff = countdownTarget - Date.now();
     if (diff <= 0) {
       el.innerHTML = '<span style="font-size:14px;font-weight:300;color:var(--green)">T-0 — LAUNCH WINDOW OPEN</span>';
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
       return;
     }
 
@@ -1137,13 +1138,17 @@ function fmtDatetime(isoStr) {
 
 // ── NSF YouTube — fetch latest video via Netlify function ────────────────────
 async function fetchNSFVideo() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch('/.netlify/functions/get-nsf-video');
+    const res = await fetch('/.netlify/functions/get-nsf-video', { signal: controller.signal });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return await res.json();
   } catch (e) {
     console.warn('Could not fetch NSF video:', e.message);
     return { videoId: null, title: null, isLive: false };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -1435,27 +1440,35 @@ async function loadAll() {
 
   // Banner
   if (bannerRes.error) {
+    console.warn('next_launch query failed:', bannerRes.error.message);
     document.getElementById('banner').innerHTML =
-      '<div class="error-msg">Could not load next launch data.</div>';
+      '<div class="error-msg" role="alert">Could not load next launch data.</div>';
   } else {
     renderBanner(bannerRes.data, nsfVideoData);
   }
 
-  // Flights
+  // Flights — clear skeletons whether or not we got data
+  const flightsGrid = document.getElementById('flights-grid');
   if (flightsRes.error || assignRes.error) {
+    console.warn('flights query failed:', flightsRes.error?.message, assignRes.error?.message);
     document.getElementById('error-flights').style.display = 'block';
-    document.getElementById('flights-grid').innerHTML = '';
+    flightsGrid.innerHTML = '';
+    flightsGrid.style.background = 'none';
+    flightsGrid.style.border = 'none';
   } else {
     document.getElementById('error-flights').style.display = 'none';
-    renderFlights(flightsRes.data, assignRes.data);
+    renderFlights(flightsRes.data ?? [], assignRes.data ?? []);
   }
 
-  // Pipeline
+  // Pipeline — clear skeletons on error
   if (boostersRes.error || shipsRes.error) {
+    console.warn('pipeline query failed:', boostersRes.error?.message, shipsRes.error?.message);
     document.getElementById('error-pipeline').style.display = 'block';
+    document.getElementById('boosters-col').innerHTML = '<h3>SUPER HEAVY BOOSTERS</h3>';
+    document.getElementById('ships-col').innerHTML = '<h3>STARSHIP VEHICLES</h3>';
   } else {
     document.getElementById('error-pipeline').style.display = 'none';
-    renderPipeline(boostersRes.data, shipsRes.data);
+    renderPipeline(boostersRes.data ?? [], shipsRes.data ?? []);
   }
 }
 
