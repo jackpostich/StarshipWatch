@@ -2,13 +2,14 @@
  * sync-launches
  *
  * Scheduled Netlify Function — runs every hour.
- * Fetches upcoming Starship launches from The Space Devs API (LL2)
- * and updates the `flights` table in Supabase.
+ * Fetches upcoming Starship launches from The Space Devs API (LL2 v2.3.0)
+ * and upserts them into the `flights` table in Supabase: existing rows are
+ * updated, new launches are inserted automatically.
  */
 
 const { createClient } = require('@supabase/supabase-js');
 
-const LL2_URL = 'https://ll.thespacedevs.com/2.2.0/launch/upcoming/'
+const LL2_URL = 'https://ll.thespacedevs.com/2.3.0/launches/upcoming/'
   + '?rocket__configuration__name=Starship'
   + '&limit=10'
   + '&ordering=net';
@@ -95,6 +96,100 @@ async function fetchLL2WithRetry() {
   throw lastErr;
 }
 
+// Build the field payloads for one LL2 launch.
+function buildPayloads(launch) {
+  const flightNum    = parseFlightNum(launch.name);
+  const statusAbbrev = launch.status?.abbrev ?? 'TBD';
+  const missionName  = launch.mission?.name ?? null;
+  // Prefer the clean mission name ("Flight 13", "Superbird-9") over the
+  // pipe-delimited launch name ("Starship | Flight 13").
+  const displayName  = missionName || launch.name;
+
+  const launchSite = launch.pad?.location?.name
+    ? `${launch.pad.name}, ${launch.pad.location.name}`
+    : (launch.pad?.name ?? null);
+
+  // Human-facing mission page (Space Launch Now, The Space Devs' frontend) —
+  // launch.url is the raw JSON API resource, not a web page.
+  const missionUrl = launch.slug
+    ? `https://spacelaunchnow.me/launch/${launch.slug}/`
+    : null;
+
+  const core = {
+    name:          displayName,
+    status:        mapStatus(statusAbbrev),
+    net_date:      typeof launch.net === 'string' ? launch.net.split('T')[0] : null,
+    net_confirmed: ['Go', 'TBC'].includes(statusAbbrev),
+    spacex_url:    missionUrl,
+    launch_site:   launchSite,
+  };
+
+  const payloadDesc = missionName && missionName !== launch.name.split('|')[0]?.trim()
+    ? missionName
+    : null;
+
+  const extended = {
+    launch_time_utc:     launch.net ?? null,
+    window_start:        launch.window_start ?? null,
+    window_end:          launch.window_end ?? null,
+    net_precision:       launch.net_precision?.name ?? null,
+    mission_description: truncate(launch.mission?.description ?? null),
+    mission_type:        launch.mission?.type ?? null,
+    orbit:               launch.mission?.orbit?.name ?? null,
+    payload_description: payloadDesc,
+  };
+
+  return { flightNum, displayName, core, extended };
+}
+
+/**
+ * Update-or-insert one launch. Numbered flights match on flight_num;
+ * unnumbered missions (Superbird-9, Starlab, ...) match on name.
+ * Falls back to core-only fields if extended schema columns are missing.
+ * Returns { action: 'updated'|'inserted'|'failed', mode, error? }.
+ */
+async function syncLaunch(sb, launch) {
+  const { flightNum, displayName, core, extended } = buildPayloads(launch);
+
+  const matchCol = flightNum ? 'flight_num' : 'name';
+  const matchVal = flightNum ?? displayName;
+
+  // ── Update pass (full → core fallback) ──
+  let mode = 'full';
+  let { data, error } = await sb
+    .from('flights')
+    .update({ ...core, ...extended })
+    .eq(matchCol, matchVal)
+    .select('id');
+
+  if (error) {
+    mode = 'core';
+    console.warn(`Full update failed for ${displayName} (${error.message}); retrying with core fields`);
+    ({ data, error } = await sb
+      .from('flights')
+      .update(core)
+      .eq(matchCol, matchVal)
+      .select('id'));
+  }
+
+  if (error) return { action: 'failed', mode, error: error.message };
+  if (data.length > 0) return { action: 'updated', mode };
+
+  // ── No matching row — insert (full → core fallback) ──
+  const baseRow = flightNum ? { flight_num: flightNum } : {};
+  mode = 'full';
+  ({ error } = await sb.from('flights').insert({ ...baseRow, ...core, ...extended }));
+
+  if (error) {
+    mode = 'core';
+    console.warn(`Full insert failed for ${displayName} (${error.message}); retrying with core fields`);
+    ({ error } = await sb.from('flights').insert({ ...baseRow, ...core }));
+  }
+
+  if (error) return { action: 'failed', mode, error: error.message };
+  return { action: 'inserted', mode };
+}
+
 exports.handler = async function () {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
@@ -121,82 +216,27 @@ exports.handler = async function () {
   const results = [];
 
   for (const launch of launches) {
-    if (!launch || typeof launch !== 'object') {
+    if (!launch || typeof launch !== 'object' || !launch.name) {
       console.warn('Skipping malformed launch entry');
       continue;
     }
 
-    const flightNum = parseFlightNum(launch.name);
-    if (!flightNum) {
-      console.warn(`Could not parse flight number from: "${launch.name}" — skipping`);
-      continue;
-    }
+    const label = launch.mission?.name ?? launch.name;
+    const result = await syncLaunch(sb, launch);
+    results.push({ name: label, ...result });
 
-    const statusAbbrev = launch.status?.abbrev ?? 'TBD';
-    const flightStatus = mapStatus(statusAbbrev);
-    const netDate      = typeof launch.net === 'string' ? launch.net.split('T')[0] : null;
-    const netConfirmed = ['Go', 'TBC'].includes(statusAbbrev);
-    const spacexUrl    = launch.url ?? null;
-
-    const launchTimeUtc    = launch.net ?? null;
-    const windowStart      = launch.window_start ?? null;
-    const windowEnd        = launch.window_end ?? null;
-    const launchSite       = launch.pad?.location?.name
-      ? `${launch.pad.name}, ${launch.pad.location.name}`
-      : (launch.pad?.name ?? null);
-    const missionDesc      = truncate(launch.mission?.description ?? null);
-    const missionType      = launch.mission?.type ?? null;
-    const orbit            = launch.mission?.orbit?.name ?? null;
-
-    const payloadDesc = launch.mission?.name
-      ? launch.mission.name !== launch.name.split('|')[0]?.trim()
-        ? launch.mission.name
-        : null
-      : null;
-
-    const coreUpdate = {
-      status:        flightStatus,
-      net_date:      netDate,
-      net_confirmed: netConfirmed,
-      spacex_url:    spacexUrl,
-      launch_site:   launchSite,
-    };
-
-    const extendedUpdate = {
-      launch_time_utc:     launchTimeUtc,
-      window_start:        windowStart,
-      window_end:          windowEnd,
-      mission_description: missionDesc,
-      mission_type:        missionType,
-      orbit:               orbit,
-      payload_description: payloadDesc,
-    };
-
-    let error;
-    ({ error } = await sb
-      .from('flights')
-      .update({ ...coreUpdate, ...extendedUpdate })
-      .eq('flight_num', flightNum));
-
-    if (error) {
-      console.warn(`Full update failed for IFT-${flightNum} (${error.message}), retrying with core fields only`);
-      ({ error } = await sb
-        .from('flights')
-        .update(coreUpdate)
-        .eq('flight_num', flightNum));
-    }
-
-    if (error) {
-      console.warn(`Could not update flight ${flightNum}: ${error.message}`);
-      results.push({ flightNum, ok: false, error: error.message });
+    if (result.action === 'failed') {
+      console.warn(`Sync failed for ${label}: ${result.error}`);
     } else {
-      console.log(`Updated IFT-${flightNum}: status=${flightStatus}, net=${netDate ?? 'TBD'}, orbit=${orbit ?? '-'}`);
-      results.push({ flightNum, ok: true, status: flightStatus, net: netDate, orbit });
+      console.log(`${result.action} ${label} (${result.mode} fields, net=${launch.net ?? 'TBD'})`);
     }
   }
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ synced: results.filter(r => r.ok).length, results }),
+    body: JSON.stringify({
+      synced: results.filter(r => r.action !== 'failed').length,
+      results,
+    }),
   };
 };

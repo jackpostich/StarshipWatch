@@ -1,79 +1,58 @@
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! If you have ideas for new data points to track or UI improvements, please open an issue or submit a pull request.
-
----
-*Disclaimer: This project is not affiliated with,This is a great project to showcase on GitHub. Since it involves scheduled tasks and database integration, a clear README will help users understand how the data flows from SpaceX to your Netlify site.
-
-Here is a comprehensive README.md template tailored for **StarshipWatcher**.
-
-***
-
 # StarshipWatch 🚀
 
-**StarshipWatcher** is a real-time tracking dashboard for upcoming SpaceX Integrated Flight Tests (IFT). It provides the latest mission data, countdowns, and flight status by aggregating public API data into a centralized dashboard.
+**StarshipWatch** is a real-time tracking dashboard for upcoming SpaceX Starship
+flights. It shows the next launch with countdown, upcoming flight cards,
+booster/ship hardware pipeline, and NASASpaceflight's latest/live YouTube stream.
 
-**Live Demo:** [starshipwatch.netlify.app](https://starshipwatch.netlify.app)
+**Live:** [starshipwatch.com](https://starshipwatch.com)
 
-## 🛠 How It Works
+## How it works
 
-The application operates as a data pipeline to ensure high availability and low latency for flight tracking:
+```
+LL2 API (thespacedevs) ──► sync-launches.js (hourly cron) ──► Supabase ──► frontend
+YouTube RSS ──► get-nsf-video.js (on demand, 3 min cache) ─────────────────► frontend
+```
 
-1.  **Data Ingestion:** A specialized script fetches the latest mission updates from public SpaceX and space-flight telemetry APIs.
-2.  **Storage:** Fetched data is processed and stored in a **Supabase** (PostgreSQL) instance, serving as the "Source of Truth" for the frontend.
-3.  **Automation:** A **Netlify Scheduled Function** (Cron Job) triggers every 2 hours to refresh the Supabase records, ensuring the site remains up-to-date without manual intervention.
-4.  **Frontend:** A lightweight web interface pulls data directly from Supabase for a fast, responsive user experience.
+1. **Ingestion** — `netlify/functions/sync-launches.js` runs hourly, fetches
+   upcoming Starship launches from The Space Devs LL2 API (v2.3.0), and
+   upserts them into the Supabase `flights` table (updates existing rows,
+   inserts new launches automatically).
+2. **Storage** — Supabase (PostgreSQL) is the source of truth. See
+   [SCHEMA_UPDATES.md](SCHEMA_UPDATES.md) for the schema and required migration.
+3. **Frontend** — a static page (`index.html` + `assets/`) reads directly from
+   Supabase with the public anon key (read access controlled by RLS policies)
+   and auto-refreshes every 60 seconds.
 
-## 🏗 Tech Stack
+## Project layout
 
-*   **Hosting:** [Netlify](https://www.netlify.com/)
-*   **Database:** [Supabase](https://supabase.com/)
-*   **Automation:** Netlify Functions / Edge Functions
+```
+index.html                        markup
+assets/css/styles.css             styles
+assets/js/config.js               constants (Supabase creds injected at build)
+assets/js/app.js                  frontend logic (ES module)
+build.js                          injects env vars into config.js at deploy
+netlify/functions/sync-launches.js  hourly LL2 → Supabase sync
+netlify/functions/get-nsf-video.js  latest NSF YouTube video endpoint
+netlify.toml                      build + cron config
+```
 
-## 🚀 Getting Started
+## Setup
 
-### Prerequisites
+1. Clone and `npm install`.
+2. Create a Supabase project, create the `flights`, `boosters`, `ships`,
+   `flight_assignments` tables and the `next_launch` view, and run the
+   migration in [SCHEMA_UPDATES.md](SCHEMA_UPDATES.md). Enable RLS with public
+   read policies on those tables.
+3. Set env vars in Netlify (see [.env.example](.env.example)):
+   `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+4. Deploy — Netlify runs `npm install && node build.js` and schedules
+   `sync-launches` hourly (`0 * * * *` in `netlify.toml`).
 
-*   Node.js (v18 or higher)
-*   A Supabase account and project
-*   Netlify CLI (for local testing of scheduled functions)
+Local dev: `netlify dev` (requires the Netlify CLI) serves the site and
+functions together.
 
-### Installation
+## License
 
-1. **Clone the repository**
-   ```bash
-   git clone [https://github.com/jackpostich/starshipwatcher.git](https://github.com/jackpostich/starshipwatcher.git)
-   cd starshipwatcher
-Install dependencies
+MIT — see [LICENSE](LICENSE).
 
-Bash
-npm install
-Environment Variables
-Create a .env file in the root directory and add your credentials:
-
-Code snippet
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-Run Locally
-
-Bash
-npm run dev
-⏱ Scheduled Updates
-The data refresh script is located in /netlify/functions/update-data.js. It is configured to run every 120 minutes via Netlify's cron scheduling.
-
-JavaScript
-// Example Schedule Configuration
-export const config = {
-  schedule: "0 */2 * * *"
-};
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-🤝 Contributing
-Contributions are welcome! If you have ideas for new data points to track or UI improvements, please open an issue or submit a pull request.
-
-Disclaimer: This project is not affiliated with, authorized, or endorsed by SpaceX.
+*Not affiliated with, authorized, or endorsed by SpaceX.*

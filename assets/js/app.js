@@ -109,8 +109,34 @@ function fmtDatetime(isoStr) {
 let countdownTarget = null;
 let countdownTimer  = null;
 
-function startCountdown(launchTimeUtc, netDate) {
+// LL2 net_precision names precise enough that a ticking countdown is honest.
+const PRECISE_ENOUGH = ['Second', 'Minute', 'Hour', 'Day'];
+
+// For vague NETs ("Month", "Quarter", "Year"), show a plain NET label instead
+// of counting down to a placeholder instant.
+function vagueNetLabel(precision, launchTimeUtc, netDate) {
+  const d = launchTimeUtc ? new Date(launchTimeUtc) : (netDate ? new Date(netDate + 'T12:00:00Z') : null);
+  if (!d || isNaN(d)) return 'DATE TBD';
+  const year = d.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' });
+  if (precision === 'Week' || precision === 'Month') {
+    const month = d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toUpperCase();
+    return `NET ${month} ${year}`;
+  }
+  return `NET ${year}`;
+}
+
+function startCountdown(launchTimeUtc, netDate, netPrecision) {
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+
+  // Vague NET (month/quarter/year precision) — a countdown would be fiction.
+  if (netPrecision && !PRECISE_ENOUGH.includes(netPrecision)) {
+    const el = document.getElementById('countdown-el');
+    if (el) {
+      el.innerHTML = `<span style="font-size:20px;font-weight:300;letter-spacing:0.1em;color:var(--text-secondary)">${escHtml(vagueNetLabel(netPrecision, launchTimeUtc, netDate))}</span>`;
+    }
+    countdownTarget = null;
+    return;
+  }
 
   if (launchTimeUtc) {
     countdownTarget = new Date(launchTimeUtc);
@@ -301,15 +327,31 @@ function renderBanner(row, videoData) {
     </div>
   `;
 
-  startCountdown(row.launch_time_utc, row.net_date);
+  startCountdown(row.launch_time_utc, row.net_date, row.net_precision);
 
   if (row.spacex_url) {
     document.getElementById('footer-link').innerHTML =
-      `<a href="${escHtml(row.spacex_url)}" target="_blank" rel="noopener">SpaceX mission page</a>`;
+      `<a href="${escHtml(row.spacex_url)}" target="_blank" rel="noopener">Mission details</a>`;
   }
 }
 
 // ── Render: Flight Cards ─────────────────────────────────────────────────────
+function buildHwMap(assignments) {
+  const hwMap = {};
+  for (const a of assignments) {
+    if (!a.is_primary) continue;
+    hwMap[a.flight_id] = { booster: a.boosters, ship: a.ships };
+  }
+  return hwMap;
+}
+
+// Card designator: "IFT-13" for numbered flights, mission type for the rest
+// (Superbird-9, Starlab, ... have no flight number).
+function flightDesignator(f) {
+  if (f.flight_num) return `IFT-${f.flight_num}`;
+  return (f.mission_type || 'MISSION').toUpperCase();
+}
+
 function renderFlights(flights, assignments) {
   const grid = document.getElementById('flights-grid');
 
@@ -320,11 +362,7 @@ function renderFlights(flights, assignments) {
     return;
   }
 
-  const hwMap = {};
-  for (const a of assignments) {
-    if (!a.is_primary) continue;
-    hwMap[a.flight_id] = { booster: a.boosters, ship: a.ships };
-  }
+  const hwMap = buildHwMap(assignments);
 
   grid.innerHTML = flights.map((f) => {
     const hw      = hwMap[f.id] ?? {};
@@ -358,7 +396,7 @@ function renderFlights(flights, assignments) {
       <div class="flight-card">
         <div class="flight-header">
           <div>
-            <div class="flight-num">IFT-${f.flight_num}</div>
+            <div class="flight-num">${escHtml(flightDesignator(f))}</div>
             <div class="flight-name">${escHtml(f.name)}</div>
           </div>
           ${statusHtml(f.status, statusLabel)}
@@ -433,6 +471,64 @@ function startRefreshBar() {
   refreshBarTimer = setInterval(updateRefreshBar, 1000);
 }
 
+// ── Live intel ticker ────────────────────────────────────────────────────────
+// Replaces the hardcoded placeholder items with lines built from current data.
+function renderTicker(flights, assignments) {
+  if (!flights.length) return;
+  const track = document.getElementById('ticker-track');
+  if (!track) return;
+
+  const hwMap = buildHwMap(assignments);
+
+  const items = flights.map(f => {
+    const bits = [];
+    bits.push(`Status: ${(f.status === 'net' ? 'GO / NET' : f.status).toUpperCase()}`);
+    if (f.net_precision && !PRECISE_ENOUGH.includes(f.net_precision)) {
+      bits.push(vagueNetLabel(f.net_precision, f.launch_time_utc, f.net_date));
+    } else if (f.launch_time_utc) {
+      bits.push(`NET ${fmtDatetime(f.launch_time_utc)}`);
+    } else if (f.net_date) {
+      bits.push(`NET ${fmtDate(f.net_date)}`);
+    } else {
+      bits.push('Date TBD');
+    }
+    if (f.launch_site) bits.push(f.launch_site);
+    const hw = hwMap[f.id];
+    if (hw?.booster?.serial || hw?.ship?.serial) {
+      bits.push([hw.booster?.serial, hw.ship?.serial].filter(Boolean).join(' + '));
+    }
+    if (f.orbit) bits.push(f.orbit);
+    const label = flightDesignator(f) === 'MISSION' ? f.name : `${flightDesignator(f)} · ${f.name}`;
+    return `<span class="intel-item"><span>${escHtml(label.toUpperCase())}</span> · ${bits.map(escHtml).join(' · ')}</span>`;
+  });
+
+  // Duplicate once for the seamless CSS marquee loop.
+  track.innerHTML = items.join('') + items.join('');
+}
+
+// ── Flights query — extended columns with core fallback ─────────────────────
+// The extended columns only exist after the SCHEMA_UPDATES.md migration has
+// been run in Supabase; fall back to core columns so the grid still renders.
+const FLIGHT_COLS_CORE = 'id, flight_num, name, status, net_date, net_confirmed, launch_site';
+const FLIGHT_COLS_FULL = FLIGHT_COLS_CORE
+  + ', launch_time_utc, window_start, window_end, net_precision'
+  + ', mission_description, mission_type, orbit, payload_description';
+
+async function fetchFlights() {
+  const query = cols => sb.from('flights')
+    .select(cols)
+    .in('status', ['upcoming', 'net'])
+    .order('net_date', { ascending: true, nullsFirst: false })
+    .order('flight_num', { ascending: true });
+
+  let res = await query(FLIGHT_COLS_FULL);
+  if (res.error && /does not exist/i.test(res.error.message ?? '')) {
+    console.warn('Extended flight columns missing — run SCHEMA_UPDATES.md migration. Falling back to core columns.');
+    res = await query(FLIGHT_COLS_CORE);
+  }
+  return res;
+}
+
 // ── Load everything ──────────────────────────────────────────────────────────
 async function loadAll() {
   const now = new Date();
@@ -449,11 +545,7 @@ async function loadAll() {
   ] = await Promise.all([
     fetchNSFVideo(),
     sb.from('next_launch').select('*').single(),
-    sb.from('flights')
-      .select('id, flight_num, name, status, net_date, net_confirmed, launch_time_utc, window_start, window_end, mission_description, mission_type, orbit, payload_description')
-      .in('status', ['upcoming', 'net'])
-      .order('net_date', { ascending: true, nullsFirst: false })
-      .order('flight_num', { ascending: true }),
+    fetchFlights(),
     sb.from('flight_assignments')
       .select('flight_id, is_primary, boosters(serial, version, notes, status), ships(serial, status, notes)')
       .eq('is_primary', true),
@@ -483,6 +575,7 @@ async function loadAll() {
   } else {
     document.getElementById('error-flights').style.display = 'none';
     renderFlights(flightsRes.data ?? [], assignRes.data ?? []);
+    renderTicker(flightsRes.data ?? [], assignRes.data ?? []);
   }
 
   if (boostersRes.error || shipsRes.error) {

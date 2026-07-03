@@ -1,46 +1,45 @@
 # Schema Updates — Enhanced Flight Data
 
-The `sync-launches.js` function now syncs additional mission fields from the LL2 API.
-To enable the enhanced display in the dashboard, add these columns to your Supabase `flights` table.
+**⚠️ This migration has not been run yet** (as of 2026-07-03 the live `flights`
+table is missing all extended columns, which forces `sync-launches.js` into its
+core-fields fallback and hides launch times, windows, and mission descriptions
+on the dashboard).
 
-## SQL Migration
+Run everything below once in the **Supabase SQL editor**, in order.
 
-Run this in the Supabase SQL editor:
+## 1. Add extended columns to `flights`
 
 ```sql
--- Enhanced mission data columns for flights table
 ALTER TABLE flights
-  ADD COLUMN IF NOT EXISTS launch_time_utc   TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS window_start      TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS window_end        TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS launch_time_utc     TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS window_start        TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS window_end          TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS net_precision       TEXT,
   ADD COLUMN IF NOT EXISTS mission_description TEXT,
-  ADD COLUMN IF NOT EXISTS mission_type      TEXT,
-  ADD COLUMN IF NOT EXISTS orbit             TEXT,
+  ADD COLUMN IF NOT EXISTS mission_type        TEXT,
+  ADD COLUMN IF NOT EXISTS orbit               TEXT,
   ADD COLUMN IF NOT EXISTS payload_description TEXT,
-  ADD COLUMN IF NOT EXISTS payload_mass_kg   NUMERIC;
+  ADD COLUMN IF NOT EXISTS payload_mass_kg     NUMERIC;
 ```
 
-## Existing Columns (reference)
+`net_precision` stores LL2's NET precision name (`Second` … `Day`, `Week`,
+`Month`, `Quarter`, `Year`). The frontend uses it to show "NET JULY 2026"
+instead of a fake countdown when the date is only month-accurate.
 
-These columns should already exist:
+## 2. Allow unnumbered missions
 
-| Column         | Type        | Notes                            |
-|----------------|-------------|----------------------------------|
-| id             | UUID/INT    | Primary key                      |
-| flight_num     | INT         | IFT flight number                |
-| name           | TEXT        | Mission name                     |
-| status         | TEXT        | flight_status enum               |
-| net_date       | DATE        | No Earlier Than date             |
-| net_confirmed  | BOOLEAN     | Whether NET is confirmed         |
-| spacex_url     | TEXT        | SpaceX mission page URL          |
-| launch_site    | TEXT        | Launch pad/site name             |
-
-## `next_launch` View
-
-If you have a `next_launch` database view, ensure it includes the new columns:
+Commercial/one-off missions (Superbird-9, Starlab) have no IFT flight number.
+If `flight_num` is `NOT NULL`, inserts for them will fail:
 
 ```sql
--- Example: recreate the next_launch view to include new fields
+ALTER TABLE flights ALTER COLUMN flight_num DROP NOT NULL;
+```
+
+(Skip if `flight_num` is already nullable.)
+
+## 3. Recreate the `next_launch` view
+
+```sql
 CREATE OR REPLACE VIEW next_launch AS
 SELECT
   f.id,
@@ -54,6 +53,7 @@ SELECT
   f.launch_time_utc,
   f.window_start,
   f.window_end,
+  f.net_precision,
   f.mission_description,
   f.mission_type,
   f.orbit,
@@ -70,7 +70,23 @@ ORDER BY f.net_date ASC NULLS LAST, f.flight_num ASC
 LIMIT 1;
 ```
 
+## Existing core columns (reference)
+
+| Column         | Type        | Notes                            |
+|----------------|-------------|----------------------------------|
+| id             | UUID/INT    | Primary key                      |
+| flight_num     | INT         | IFT flight number (nullable)     |
+| name           | TEXT        | Mission name                     |
+| status         | TEXT        | flight_status enum               |
+| net_date       | DATE        | No Earlier Than date             |
+| net_confirmed  | BOOLEAN     | Whether NET is confirmed         |
+| spacex_url     | TEXT        | Mission details page URL         |
+| launch_site    | TEXT        | Launch pad/site name             |
+
 ## Notes
 
-- The `sync-launches.js` function gracefully handles missing columns — it falls back to core fields only if the extended update fails.
-- The frontend (`index.html`) also handles missing fields gracefully — it only shows them if they're present in the data.
+- Both `sync-launches.js` and the frontend gracefully degrade if these columns
+  are missing — but you lose launch times, windows, descriptions, and accurate
+  NET-precision display until the migration runs.
+- After running the SQL, trigger a sync to backfill the new columns:
+  `curl https://starshipwatch.com/.netlify/functions/sync-launches`
