@@ -328,11 +328,6 @@ function renderBanner(row, videoData) {
   `;
 
   startCountdown(row.launch_time_utc, row.net_date, row.net_precision);
-
-  if (row.spacex_url) {
-    document.getElementById('footer-link').innerHTML =
-      `<a href="${escHtml(row.spacex_url)}" target="_blank" rel="noopener">Mission details</a>`;
-  }
 }
 
 // ── Render: Flight Cards ─────────────────────────────────────────────────────
