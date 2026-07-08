@@ -35,20 +35,13 @@
     <div class="intel-tag">INTEL</div>
     <div class="intel-ticker">
       <div class="intel-ticker-track" id="ticker-track">
-        <!-- Populated twice for seamless loop -->
-        <span class="intel-item"><span>IFT-12 GO FOR LAUNCH</span> · Flight 12 targets May 19, 2026 · Booster 19 + Ship 39 · Block 3 maiden flight · First launch from Pad 2</span>
-        <span class="intel-item"><span>IFT-12 PAYLOAD</span> · 22 Starlink V3 Mass Simulators (~44,000 kg) · 2 with heat-shield cameras · Suborbital trajectory · Indian Ocean splashdown</span>
-        <span class="intel-item"><span>IFT-12 OBJECTIVES</span> · Block 3 debut · Raptor engine relight in space · Heat shield tile removal test · Rear flap structural stress test · Dynamic banking maneuver</span>
-        <span class="intel-item"><span>IFT-13 OUTLOOK</span> · Projected June 2026 · Date/time TBD · Starbase TX · B18 replacement after November 2025 implosion during cryo test</span>
-        <span class="intel-item"><span>BLOCK 3 UPGRADES</span> · Raptor 3 engines · Integrated interstage · 3 grid fins (down from 4) · Target: 100+ mt to LEO reusable</span>
-        <span class="intel-item"><span>SUPERBIRD-9</span> · First commercial Starship payload · Japanese comsat · Projected June 2027 · Kennedy Space Center</span>
-        <!-- duplicate for seamless loop -->
-        <span class="intel-item"><span>IFT-12 GO FOR LAUNCH</span> · Flight 12 targets May 19, 2026 · Booster 19 + Ship 39 · Block 3 maiden flight · First launch from Pad 2</span>
-        <span class="intel-item"><span>IFT-12 PAYLOAD</span> · 22 Starlink V3 Mass Simulators (~44,000 kg) · 2 with heat-shield cameras · Suborbital trajectory · Indian Ocean splashdown</span>
-        <span class="intel-item"><span>IFT-12 OBJECTIVES</span> · Block 3 debut · Raptor engine relight in space · Heat shield tile removal test · Rear flap structural stress test · Dynamic banking maneuver</span>
-        <span class="intel-item"><span>IFT-13 OUTLOOK</span> · Projected June 2026 · Date/time TBD · Starbase TX · B18 replacement after November 2025 implosion during cryo test</span>
-        <span class="intel-item"><span>BLOCK 3 UPGRADES</span> · Raptor 3 engines · Integrated interstage · 3 grid fins (down from 4) · Target: 100+ mt to LEO reusable</span>
-        <span class="intel-item"><span>SUPERBIRD-9</span> · First commercial Starship payload · Japanese comsat · Projected June 2027 · Kennedy Space Center</span>
+        <!-- Placeholder only — renderTicker() replaces this with live flight
+             data. Keep it generic so it can never go stale. Duplicated for
+             the seamless marquee loop. -->
+        <span class="intel-item"><span>STARSHIP WATCH</span> · Loading live mission data from The Space Devs LL2 API…</span>
+        <span class="intel-item"><span>STARSHIP WATCH</span> · Tracking upcoming Starship flights, hardware, and launch windows</span>
+        <span class="intel-item"><span>STARSHIP WATCH</span> · Loading live mission data from The Space Devs LL2 API…</span>
+        <span class="intel-item"><span>STARSHIP WATCH</span> · Tracking upcoming Starship flights, hardware, and launch windows</span>
       </div>
     </div>
   </div>
@@ -109,52 +102,55 @@
   <div class="section-label" id="intel-section">COMMUNITY INTELLIGENCE</div>
   <div class="community-grid">
 
+    <!-- Evergreen resource cards — no mission-specific dates, so they can't
+         go stale. Live mission data lives in the ticker and flight cards. -->
+
     <div class="community-card">
       <div class="community-card-source">NASASpaceflight.com</div>
-      <div class="community-card-title">Flight 12: Block 3 Nearing Launch</div>
-      <div class="community-card-desc">Block 3 Starship fully stacked on Pad 2 at Starbase. B19 and S39 represent significant redesigns across every element of the Starship architecture. First Block 3 booster features Raptor 3 engines, integrated interstage, and 3 grid fins instead of 4. Pad 1 conversion to Block 3 configuration ongoing.</div>
+      <div class="community-card-title">Starbase News & 24/7 Coverage</div>
+      <div class="community-card-desc">NASASpaceflight (NSF) is the gold standard for Starship reporting — daily Starbase updates, hardware tracking, launch countdowns, and round-the-clock live cameras pointed at the production site and pads. Their articles and forums break most Starship news first.</div>
       <a href="https://www.nasaspaceflight.com" target="_blank" rel="noopener" class="community-card-link">→ NASASpaceflight.com</a>
-      <div class="community-card-date">May 2026</div>
-    </div>
-
-    <div class="community-card">
-      <div class="community-card-source">What About It? — YouTube</div>
-      <div class="community-card-title">IFT-12 Coverage & Analysis</div>
-      <div class="community-card-desc">Felix Schlang's What About It? channel provides in-depth pre-launch analysis, Starbase walkarounds, and speculative deep dives on Starship development. Essential viewing for understanding the Block 3 upgrades, Raptor 3 engine improvements, and what's next on the road to orbital flight.</div>
-      <a href="https://www.youtube.com/@WhatAboutIt" target="_blank" rel="noopener" class="community-card-link">→ @WhatAboutIt on YouTube</a>
-      <div class="community-card-date">Ongoing</div>
-    </div>
-
-    <div class="community-card">
-      <div class="community-card-source">Mission Preview · IFT-12</div>
-      <div class="community-card-title">22 Starlink Simulators + Heat Shield Test</div>
-      <div class="community-card-desc">Primary payload: 22 Starlink V3 Mass Simulators (~44,000 kg). Two feature cameras to scan the heat shield. Several tiles painted white as imaging targets. One tile intentionally removed to measure aerodynamic load on adjacent tiles. Booster 19 targets Gulf of Mexico splashdown. Ship 39 targets Indian Ocean.</div>
-      <a href="https://www.spacex.com/launches/starship-flight-12" target="_blank" rel="noopener" class="community-card-link">→ SpaceX Mission Page</a>
-      <div class="community-card-date">NET May 19, 2026 · 22:30 UTC</div>
-    </div>
-
-    <div class="community-card">
-      <div class="community-card-source">Looking Ahead · IFT-13</div>
-      <div class="community-card-title">Flight 13 Projected for June 2026</div>
-      <div class="community-card-desc">IFT-13 is projected for June 2026 but no date or time has been set. SpaceX is already preparing for its follow-on flight. The pace of flight tests is expected to accelerate significantly with the Block 3 production line ramping up and Pad 1 conversion ongoing for additional launch cadence.</div>
-      <a href="https://theorbitalwire.com/launches/ac897b9f-44d2-4ff4-8416-1a0a076e98a2/" target="_blank" rel="noopener" class="community-card-link">→ The Orbital Wire</a>
-      <div class="community-card-date">June 2026 (TBD)</div>
-    </div>
-
-    <div class="community-card">
-      <div class="community-card-source">Commercial Milestone</div>
-      <div class="community-card-title">Superbird-9: First Commercial Payload</div>
-      <div class="community-card-desc">SKY Perfect JSAT's Superbird-9 Japanese communications satellite is manifested as the first commercial Starship payload. Launch is projected for June 2027 from Kennedy Space Center, FL. This marks Starship's transition from test flights to operational revenue launches, a critical milestone for SpaceX.</div>
-      <a href="https://www.spacelaunchschedule.com/launch/starship-superbird-9/" target="_blank" rel="noopener" class="community-card-link">→ Mission Details</a>
-      <div class="community-card-date">June 2027 (Projected)</div>
+      <div class="community-card-date">Updated daily</div>
     </div>
 
     <div class="community-card">
       <div class="community-card-source">NASASpaceflight — Live Coverage</div>
       <div class="community-card-title">Watch All Starship Launches Live</div>
-      <div class="community-card-desc">NASASpaceflight (NSF) provides industry-leading live coverage of every Starship test flight, with multiple camera angles, expert commentary, and real-time telemetry analysis. Their YouTube channel and website are the gold standard for Starship launch coverage.</div>
+      <div class="community-card-desc">NSF provides industry-leading live coverage of every Starship test flight, with multiple camera angles, expert commentary, and real-time telemetry analysis. The stream embedded above automatically shows their latest or live video.</div>
       <a href="https://www.youtube.com/@NASASpaceflight" target="_blank" rel="noopener" class="community-card-link">→ @NASASpaceflight on YouTube</a>
       <div class="community-card-date">Live during all launches</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">What About It? — YouTube</div>
+      <div class="community-card-title">Pre-Launch Analysis & Deep Dives</div>
+      <div class="community-card-desc">Felix Schlang's What About It? channel provides in-depth pre-launch analysis, Starbase walkarounds, and speculative deep dives on Starship development — essential viewing for understanding vehicle upgrades, Raptor engine improvements, and what's next on the road to full reuse.</div>
+      <a href="https://www.youtube.com/@WhatAboutIt" target="_blank" rel="noopener" class="community-card-link">→ @WhatAboutIt on YouTube</a>
+      <div class="community-card-date">Ongoing</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">Ringwatchers</div>
+      <div class="community-card-title">Hardware Tracking & Diagrams</div>
+      <div class="community-card-desc">A community team that tracks every booster, ship, and ground-support build at Starbase in obsessive detail, with original diagrams and explainers. The best single source for understanding what hardware exists, what's scrapped, and what flies next.</div>
+      <a href="https://ringwatchers.com" target="_blank" rel="noopener" class="community-card-link">→ Ringwatchers.com</a>
+      <div class="community-card-date">Updated continuously</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">SpaceX — Official</div>
+      <div class="community-card-title">Starship Vehicle Page & Webcasts</div>
+      <div class="community-card-desc">SpaceX's official Starship page carries vehicle specs, mission pages for each flight test, and official webcasts. Launch announcements and flight objectives are posted here and on SpaceX's X account ahead of each mission.</div>
+      <a href="https://www.spacex.com/vehicles/starship/" target="_blank" rel="noopener" class="community-card-link">→ spacex.com/vehicles/starship</a>
+      <div class="community-card-date">Official source</div>
+    </div>
+
+    <div class="community-card">
+      <div class="community-card-source">The Space Devs</div>
+      <div class="community-card-title">Launch Library 2 — Our Data Source</div>
+      <div class="community-card-desc">The launch dates, windows, statuses, and mission details on this dashboard come from The Space Devs' free Launch Library 2 API, a community-maintained database of every orbital launch. Data refreshes hourly on our side and every 60 seconds in your browser.</div>
+      <a href="https://thespacedevs.com" target="_blank" rel="noopener" class="community-card-link">→ thespacedevs.com</a>
+      <div class="community-card-date">Synced hourly</div>
     </div>
 
   </div>

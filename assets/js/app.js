@@ -29,21 +29,22 @@ function formatTimeInTZ(date, tz) {
   });
 }
 
-function formatDateUpper(date) {
+function formatDateUpper(date, tz) {
   return date.toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
+    ...(tz ? { timeZone: tz } : {}),
   }).toUpperCase();
 }
 
 function buildTimezoneString(launchTimeUtc, netDate) {
-  let d;
-  if (launchTimeUtc) {
-    d = new Date(launchTimeUtc);
-  } else if (netDate) {
-    d = new Date(netDate + 'T12:00:00-05:00');
-  } else {
-    return '';
+  // Date-only NET: clock times would be fiction, so show just the date.
+  if (!launchTimeUtc) {
+    if (!netDate) return '';
+    const d = new Date(netDate + 'T12:00:00Z');
+    return isNaN(d) ? '' : formatDateUpper(d, 'UTC');
   }
+
+  const d = new Date(launchTimeUtc);
   if (isNaN(d)) return '';
 
   const launchTime = formatTimeInTZ(d, LAUNCH_SITE_TZ);
@@ -141,7 +142,8 @@ function startCountdown(launchTimeUtc, netDate, netPrecision) {
   if (launchTimeUtc) {
     countdownTarget = new Date(launchTimeUtc);
   } else if (netDate) {
-    countdownTarget = new Date(netDate + 'T12:00:00-05:00');
+    // Date-only NET: noon UTC as a neutral placeholder instant.
+    countdownTarget = new Date(netDate + 'T12:00:00Z');
   } else {
     countdownTarget = null;
   }
@@ -157,7 +159,12 @@ function startCountdown(launchTimeUtc, netDate, netPrecision) {
 
     const diff = countdownTarget - Date.now();
     if (diff <= 0) {
-      el.innerHTML = '<span style="font-size:14px;font-weight:300;color:var(--green)">T-0 — LAUNCH WINDOW OPEN</span>';
+      // Within a day of T-0 the launch is plausibly in progress; beyond that
+      // the row is stale (sync hasn't marked it launched yet) — say so
+      // instead of showing "window open" indefinitely.
+      el.innerHTML = diff > -86400000
+        ? '<span style="font-size:14px;font-weight:300;color:var(--green)">T-0 — LAUNCH WINDOW OPEN</span>'
+        : '<span style="font-size:14px;font-weight:300;color:var(--text-muted)">AWAITING SCHEDULE UPDATE</span>';
       if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
       return;
     }
@@ -539,7 +546,9 @@ async function loadAll() {
     shipsRes,
   ] = await Promise.all([
     fetchNSFVideo(),
-    sb.from('next_launch').select('*').single(),
+    // maybeSingle: zero rows → data:null (renders the "STAY TUNED" state)
+    // instead of the PGRST116 error .single() would raise.
+    sb.from('next_launch').select('*').maybeSingle(),
     fetchFlights(),
     sb.from('flight_assignments')
       .select('flight_id, is_primary, boosters(serial, version, notes, status), ships(serial, status, notes)')

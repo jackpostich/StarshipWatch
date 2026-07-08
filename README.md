@@ -13,10 +13,14 @@ LL2 API (thespacedevs) ──► sync-launches.js (hourly cron) ──► Supaba
 YouTube RSS ──► get-nsf-video.js (on demand, 3 min cache) ─────────────────► frontend
 ```
 
-1. **Ingestion** — `netlify/functions/sync-launches.js` runs hourly, fetches
-   upcoming Starship launches from The Space Devs LL2 API (v2.3.0), and
-   upserts them into the Supabase `flights` table (updates existing rows,
-   inserts new launches automatically).
+1. **Ingestion** — `netlify/functions/sync-launches.js` runs hourly and makes
+   two passes against The Space Devs LL2 API (v2.3.0): upcoming Starship
+   launches are upserted into the Supabase `flights` table (updates existing
+   rows, inserts new launches automatically), and recent *previous* launches
+   update the status of rows already tracked — so a flight that lifts off is
+   marked launched/success/failure instead of lingering as "upcoming".
+   The `boosters`, `ships`, and `flight_assignments` tables are maintained
+   manually in Supabase; there is no automated ingestion for hardware.
 2. **Storage** — Supabase (PostgreSQL) is the source of truth. See
    [SCHEMA_UPDATES.md](SCHEMA_UPDATES.md) for the schema and required migration.
 3. **Frontend** — a static page (`index.html` + `assets/`) reads directly from
@@ -31,7 +35,7 @@ assets/css/styles.css             styles
 assets/js/config.js               constants (Supabase creds injected at build)
 assets/js/app.js                  frontend logic (ES module)
 build.js                          injects env vars into config.js at deploy
-netlify/functions/sync-launches.js  hourly LL2 → Supabase sync
+netlify/functions/sync-launches.js  hourly LL2 → Supabase sync (upcoming + status updates)
 netlify/functions/get-nsf-video.js  latest NSF YouTube video endpoint
 netlify.toml                      build + cron config
 ```

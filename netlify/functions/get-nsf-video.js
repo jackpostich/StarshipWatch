@@ -62,10 +62,9 @@ exports.handler = async function (event) {
     const entryMatch = xml.match(/<entry>[\s\S]*?<title>([^<]+)<\/title>/);
     const title = entryMatch ? decodeEntities(entryMatch[1].trim()) : null;
 
-    const liveKeywords = ['LIVE', 'live stream', 'Live Coverage', 'Launch Live', 'Watching Live'];
-    const isLive = title
-      ? liveKeywords.some(kw => title.toLowerCase().includes(kw.toLowerCase()))
-      : false;
+    // Word-boundary match so titles containing "delivered" or "lives" don't
+    // false-positive on the substring "live".
+    const isLive = title ? /\blive\b/i.test(title) : false;
 
     return {
       statusCode: 200,

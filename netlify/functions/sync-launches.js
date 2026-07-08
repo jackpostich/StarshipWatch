@@ -2,17 +2,22 @@
  * sync-launches
  *
  * Scheduled Netlify Function — runs every hour.
- * Fetches upcoming Starship launches from The Space Devs API (LL2 v2.3.0)
- * and upserts them into the `flights` table in Supabase: existing rows are
- * updated, new launches are inserted automatically.
+ * Fetches upcoming AND recent Starship launches from The Space Devs API
+ * (LL2 v2.3.0) and upserts them into the `flights` table in Supabase:
+ * existing rows are updated, new launches are inserted automatically.
+ *
+ * The previous-launches pass keeps statuses honest after liftoff — once a
+ * flight leaves LL2's upcoming feed its row would otherwise stay frozen at
+ * 'upcoming'/'net' and the dashboard would show it as the next launch forever.
  */
 
 const { createClient } = require('@supabase/supabase-js');
 
-const LL2_URL = 'https://ll.thespacedevs.com/2.3.0/launches/upcoming/'
-  + '?rocket__configuration__name=Starship'
-  + '&limit=10'
-  + '&ordering=net';
+const LL2_BASE = 'https://ll.thespacedevs.com/2.3.0/launches';
+const LL2_FILTER = 'rocket__configuration__name=Starship';
+
+const LL2_UPCOMING_URL = `${LL2_BASE}/upcoming/?${LL2_FILTER}&limit=10&ordering=net`;
+const LL2_PREVIOUS_URL = `${LL2_BASE}/previous/?${LL2_FILTER}&limit=5&ordering=-net`;
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 3;
@@ -66,11 +71,11 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = FETCH_TIMEOUT_MS) {
   }
 }
 
-async function fetchLL2WithRetry() {
+async function fetchLL2WithRetry(url) {
   let lastErr;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const res = await fetchWithTimeout(LL2_URL, {
+      const res = await fetchWithTimeout(url, {
         headers: { 'User-Agent': 'starship-watch/1.0 (fan tracker)' },
       });
       if (res.status === 429 || res.status >= 500) {
@@ -146,9 +151,11 @@ function buildPayloads(launch) {
  * Update-or-insert one launch. Numbered flights match on flight_num;
  * unnumbered missions (Superbird-9, Starlab, ...) match on name.
  * Falls back to core-only fields if extended schema columns are missing.
- * Returns { action: 'updated'|'inserted'|'failed', mode, error? }.
+ * Pass insertIfMissing=false for the previous-launches pass: those only
+ * correct statuses of rows we already track, they don't backfill history.
+ * Returns { action: 'updated'|'inserted'|'skipped'|'failed', mode, error? }.
  */
-async function syncLaunch(sb, launch) {
+async function syncLaunch(sb, launch, insertIfMissing = true) {
   const { flightNum, displayName, core, extended } = buildPayloads(launch);
 
   const matchCol = flightNum ? 'flight_num' : 'name';
@@ -175,6 +182,8 @@ async function syncLaunch(sb, launch) {
   if (error) return { action: 'failed', mode, error: error.message };
   if (data.length > 0) return { action: 'updated', mode };
 
+  if (!insertIfMissing) return { action: 'skipped', mode };
+
   // ── No matching row — insert (full → core fallback) ──
   const baseRow = flightNum ? { flight_num: flightNum } : {};
   mode = 'full';
@@ -200,42 +209,58 @@ exports.handler = async function () {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  let launches;
+  let upcoming;
   try {
-    launches = await fetchLL2WithRetry();
+    upcoming = await fetchLL2WithRetry(LL2_UPCOMING_URL);
   } catch (err) {
-    console.error('Failed to fetch from LL2:', err.message);
+    console.error('Failed to fetch upcoming launches from LL2:', err.message);
     return { statusCode: 502, body: `LL2 fetch error: ${err.message}` };
   }
 
-  if (!launches.length) {
-    console.log('LL2 returned no upcoming Starship launches');
-    return { statusCode: 200, body: JSON.stringify({ synced: 0 }) };
+  // Previous launches correct post-liftoff statuses. A failure here shouldn't
+  // abort the run — upcoming data is still worth syncing.
+  let previous = [];
+  try {
+    previous = await fetchLL2WithRetry(LL2_PREVIOUS_URL);
+  } catch (err) {
+    console.warn('Failed to fetch previous launches from LL2 (statuses may lag):', err.message);
   }
 
   const results = [];
 
-  for (const launch of launches) {
-    if (!launch || typeof launch !== 'object' || !launch.name) {
-      console.warn('Skipping malformed launch entry');
-      continue;
-    }
+  async function runPass(launches, insertIfMissing) {
+    for (const launch of launches) {
+      if (!launch || typeof launch !== 'object' || !launch.name) {
+        console.warn('Skipping malformed launch entry');
+        continue;
+      }
 
-    const label = launch.mission?.name ?? launch.name;
-    const result = await syncLaunch(sb, launch);
-    results.push({ name: label, ...result });
+      const label = launch.mission?.name ?? launch.name;
+      const result = await syncLaunch(sb, launch, insertIfMissing);
+      results.push({ name: label, ...result });
 
-    if (result.action === 'failed') {
-      console.warn(`Sync failed for ${label}: ${result.error}`);
-    } else {
-      console.log(`${result.action} ${label} (${result.mode} fields, net=${launch.net ?? 'TBD'})`);
+      if (result.action === 'failed') {
+        console.warn(`Sync failed for ${label}: ${result.error}`);
+      } else {
+        console.log(`${result.action} ${label} (${result.mode} fields, net=${launch.net ?? 'TBD'})`);
+      }
     }
   }
+
+  await runPass(upcoming, true);
+
+  // Only sync previous launches with a definitive post-liftoff status —
+  // an unrecognized abbrev maps to 'upcoming' and would regress a done flight.
+  const POST_LIFTOFF = ['launched', 'success', 'partial', 'failure'];
+  await runPass(
+    previous.filter(l => POST_LIFTOFF.includes(mapStatus(l?.status?.abbrev ?? 'TBD'))),
+    false
+  );
 
   return {
     statusCode: 200,
     body: JSON.stringify({
-      synced: results.filter(r => r.action !== 'failed').length,
+      synced: results.filter(r => r.action !== 'failed' && r.action !== 'skipped').length,
       results,
     }),
   };
